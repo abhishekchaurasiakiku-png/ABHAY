@@ -1,0 +1,36 @@
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.iml
+
+# Flutter / Dart
+frontend/build/
+frontend/.dart_tool/
+frontend/.flutter-plugins
+frontend/.flutter-plugins-dependencies
+frontend/.packages
+frontend/.pub-cache/
+frontend/android/.gradle/
+frontend/ios/Pods/
+frontend/ios/.symlinks/
+frontend/macos/Flutter/ephemeral/
+frontend/windows/flutter/ephemeral/
+frontend/web/.last_build_id
+
+# Backend / Node
+backend/node_modules/
+backend/dist/
+backend/.env
+
+# AI service / Python
+ai-service/__pycache__/
+ai-service/.venv/
+ai-service/.env
+
+# Logs
+*.log
+coverage/
