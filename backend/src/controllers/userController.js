@@ -1,0 +1,67 @@
+const User = require('../models/User');
+
+/**
+ * GET /api/users/profile
+ */
+exports.getProfile = async (req, res) => {
+  try {
+    const user = await User.findById(req.userId);
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    res.json(user.toSafeJSON());
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch profile' });
+  }
+};
+
+/**
+ * PUT /api/users/profile
+ */
+exports.updateProfile = async (req, res) => {
+  try {
+    const { name, phone } = req.body;
+    const user = await User.findByIdAndUpdate(
+      req.userId,
+      { $set: { name, phone } },
+      { new: true, runValidators: true }
+    );
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    res.json(user.toSafeJSON());
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to update profile' });
+  }
+};
+
+/**
+ * PUT /api/users/contacts
+ */
+exports.updateContacts = async (req, res) => {
+  try {
+    const { emergencyContacts } = req.body;
+    const user = await User.findByIdAndUpdate(
+      req.userId,
+      { $set: { emergencyContacts } },
+      { new: true }
+    );
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    res.json(user.toSafeJSON());
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to update contacts' });
+  }
+};
+
+/**
+ * PUT /api/users/ai-settings
+ */
+exports.updateAiSettings = async (req, res) => {
+  try {
+    const user = await User.findByIdAndUpdate(
+      req.userId,
+      { $set: { aiSettings: req.body } },
+      { new: true }
+    );
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    res.json(user.toSafeJSON());
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to update AI settings' });
+  }
+};
