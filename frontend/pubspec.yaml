@@ -87,3 +87,17 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+
+provider:
+http:
+shared_preferences:
+flutter_svg:
+google_fonts:
+
+
+  cupertino_icons: ^1.0.8
+  provider: ^6.1.5
+  go_router: ^16.0.0
+  google_fonts: ^6.3.0
+  http: ^1.5.0
+  shared_preferences: ^2.5.3
