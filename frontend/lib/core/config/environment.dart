@@ -16,11 +16,11 @@ class Environment {
   // 127.0.0.1 / localhost only works for Android emulators (use 10.0.2.2 for Android Emulator) or when using USB debugging with adb reverse.
   static const String _developmentBaseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'http://10.106.1.246:3000',
+    defaultValue: 'https://abhay-hwe8.onrender.com',
   );
   static const String _developmentWsUrl = String.fromEnvironment(
     'API_WS_URL',
-    defaultValue: 'ws://10.106.1.246:3000',
+    defaultValue: 'wss://abhay-hwe8.onrender.com',
   );
 
   /// Get current environment based on compilation mode.

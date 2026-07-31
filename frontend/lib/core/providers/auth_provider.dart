@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:dio/dio.dart';
 import '../network/api_client.dart';
 import '../storage/storage_service.dart';
 import '../constants/api_constants.dart';
@@ -140,8 +141,27 @@ class AuthProvider extends ChangeNotifier {
   }
 
   String _parseError(dynamic e) {
-    if (e.toString().contains('401')) return 'Invalid email or password';
-    if (e.toString().contains('409')) return 'Email already registered';
+    if (e is DioException) {
+      if (e.type == DioExceptionType.connectionTimeout ||
+          e.type == DioExceptionType.receiveTimeout ||
+          e.type == DioExceptionType.connectionError) {
+        return 'Unable to connect to server. Please check your internet connection.';
+      }
+      final responseData = e.response?.data;
+      if (responseData is Map && responseData.containsKey('error')) {
+        // If it's a validation error with details
+        if (responseData.containsKey('details')) {
+          final details = responseData['details'];
+          if (details is List && details.isNotEmpty) {
+            return details.map((d) => d['message']).join('\n');
+          }
+        }
+        return responseData['error'].toString();
+      }
+      if (e.response?.statusCode == 401) return 'Invalid email or password';
+      if (e.response?.statusCode == 409) return 'Email already registered';
+      if (e.response?.statusCode == 400) return 'Validation failed. Please check input.';
+    }
     if (e.toString().contains('SocketException')) return 'No internet connection';
     return 'Something went wrong. Please try again.';
   }
