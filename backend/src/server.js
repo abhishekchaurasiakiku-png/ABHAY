@@ -79,6 +79,17 @@ app.use('/api/users', userRoutes);
 app.use('/api/incidents', incidentRoutes);
 app.use('/api/safety', safetyRoutes);
 
+// Helper to safely extract database host for diagnostics
+function getDatabaseHost(uri) {
+  try {
+    if (!uri) return 'none';
+    const cleaned = uri.replace(/^mongodb\+srv:\/\//, 'http://').replace(/^mongodb:\/\//, 'http://');
+    return new URL(cleaned).hostname;
+  } catch (e) {
+    return 'invalid-format';
+  }
+}
+
 // Health check — includes MongoDB connection status
 app.get('/api/health', (req, res) => {
   const mongoState = mongoose.connection.readyState;
@@ -96,6 +107,7 @@ app.get('/api/health', (req, res) => {
     uptime: process.uptime(),
     environment: process.env.NODE_ENV || 'development',
     mongodb: mongoStates[mongoState] || 'unknown',
+    databaseHost: getDatabaseHost(MONGODB_URI),
   });
 });
 
