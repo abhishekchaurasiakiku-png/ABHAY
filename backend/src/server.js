@@ -90,6 +90,15 @@ function getDatabaseHost(uri) {
   }
 }
 
+// Safely obfuscate connection string password
+function obfuscateUri(uri) {
+  if (!uri) return 'none';
+  if (!uri.startsWith('mongodb://') && !uri.startsWith('mongodb+srv://')) {
+    return `non-standard: ${uri.substring(0, 20)}...`;
+  }
+  return uri.replace(/(mongodb(?:\+srv)?:\/\/[^:]+:)[^@]+(@.+)/, '$1****$2');
+}
+
 // Health check — includes MongoDB connection status
 app.get('/api/health', (req, res) => {
   const mongoState = mongoose.connection.readyState;
@@ -108,6 +117,7 @@ app.get('/api/health', (req, res) => {
     environment: process.env.NODE_ENV || 'development',
     mongodb: mongoStates[mongoState] || 'unknown',
     databaseHost: getDatabaseHost(MONGODB_URI),
+    obfuscatedUri: obfuscateUri(MONGODB_URI),
   });
 });
 
