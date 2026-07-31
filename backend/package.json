@@ -5,26 +5,37 @@
   "main": "src/server.js",
   "scripts": {
     "start": "node src/server.js",
+    "start:prod": "NODE_ENV=production node src/server.js",
     "dev": "nodemon src/server.js",
     "lint": "echo 'Lint passed'"
   },
-  "keywords": ["safety", "women", "sos", "ai"],
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "safety",
+    "women",
+    "sos",
+    "ai"
+  ],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
-    "express": "^4.21.0",
-    "mongoose": "^8.8.0",
-    "ws": "^8.18.0",
+    "bcrypt": "^5.1.1",
     "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.0",
+    "express-rate-limit": "^8.6.1",
+    "express-validator": "^7.3.2",
+    "firebase-admin": "^13.0.0",
     "helmet": "^8.0.0",
     "jsonwebtoken": "^9.0.2",
-    "bcrypt": "^5.1.1",
-    "dotenv": "^16.4.5",
-    "firebase-admin": "^13.0.0",
+    "mongoose": "^8.8.0",
+    "morgan": "^1.10.0",
     "multer": "^1.4.5-lts.1",
     "uuid": "^11.0.0",
-    "morgan": "^1.10.0"
+    "ws": "^8.18.0"
   },
   "devDependencies": {
     "nodemon": "^3.1.0"

@@ -1,0 +1,258 @@
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../core/constants/app_colors.dart';
+import '../../core/providers/sos_provider.dart';
+import '../../shared/widgets/sos_button.dart';
+import '../../core/services/fake_call_service.dart';
+
+/// Emergency SOS page with hold-to-activate button, active SOS display,
+/// fake call trigger, and emergency contacts quick-dial.
+class SosPage extends StatelessWidget {
+  const SosPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        title: const Text('Emergency SOS'),
+        centerTitle: true,
+        automaticallyImplyLeading: false,
+      ),
+      body: Consumer<SosProvider>(
+        builder: (context, sos, _) {
+          return SafeArea(
+            child: Column(
+              children: [
+                const Spacer(flex: 1),
+
+                // SOS Button
+                Center(
+                  child: SosButton(
+                    isActive: sos.isSosActive,
+                    onActivated: () async {
+                      if (sos.isSosActive) {
+                        await sos.resolveSos();
+                      } else {
+                        await sos.triggerManualSos();
+                      }
+                    },
+                  ),
+                ),
+
+                const SizedBox(height: 24),
+
+                // Status text
+                Text(
+                  sos.isSosActive
+                      ? '🆘 SOS ACTIVE'
+                      : 'Hold button for 2 seconds to activate',
+                  style: TextStyle(
+                    color: sos.isSosActive
+                        ? AppColors.emergency
+                        : AppColors.textTertiary,
+                    fontSize: 14,
+                    fontWeight: sos.isSosActive ? FontWeight.w700 : FontWeight.w400,
+                  ),
+                ),
+
+                // Active SOS info
+                if (sos.isSosActive) ...[
+                  const SizedBox(height: 16),
+                  _ActiveSosInfo(sos: sos),
+                ],
+
+                const Spacer(flex: 1),
+
+                // Quick action buttons
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: Column(
+                    children: [
+                      if (sos.isSosActive)
+                        SizedBox(
+                          width: double.infinity,
+                          height: 50,
+                          child: OutlinedButton.icon(
+                            onPressed: () => sos.resolveSos(notes: 'Manually resolved'),
+                            icon: const Icon(Icons.check_circle),
+                            label: const Text('Resolve SOS'),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: AppColors.safe,
+                              side: const BorderSide(color: AppColors.safe),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                          ),
+                        ),
+
+                      const SizedBox(height: 12),
+
+                      // Fake call button
+                      SizedBox(
+                        width: double.infinity,
+                        height: 50,
+                        child: ElevatedButton.icon(
+                          onPressed: () {
+                            _showFakeCallDialog(context, sos);
+                          },
+                          icon: const Icon(Icons.phone, size: 20),
+                          label: const Text('Fake Call'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.surfaceLight,
+                            foregroundColor: AppColors.textPrimary,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 24),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  void _showFakeCallDialog(BuildContext context, SosProvider sos) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) {
+        return Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Choose Caller',
+                style: TextStyle(
+                  color: AppColors.textPrimary,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 16),
+              ...FakeCallService.callerPresets.map((preset) {
+                return ListTile(
+                  leading: Container(
+                    width: 42,
+                    height: 42,
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(preset.icon, color: AppColors.primary, size: 20),
+                  ),
+                  title: Text(
+                    preset.name,
+                    style: const TextStyle(color: AppColors.textPrimary),
+                  ),
+                  subtitle: Text(
+                    preset.number,
+                    style: const TextStyle(color: AppColors.textTertiary, fontSize: 12),
+                  ),
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    sos.triggerFakeCall(
+                      callerName: preset.name,
+                      callerNumber: preset.number,
+                      delay: const Duration(seconds: 5),
+                    );
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Fake call from "${preset.name}" in 5 seconds'),
+                        backgroundColor: AppColors.surfaceLight,
+                      ),
+                    );
+                  },
+                );
+              }),
+              const SizedBox(height: 16),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _ActiveSosInfo extends StatelessWidget {
+  final SosProvider sos;
+
+  const _ActiveSosInfo({required this.sos});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 24),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.emergency.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: AppColors.emergency.withValues(alpha: 0.3),
+        ),
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.access_time, color: AppColors.emergency, size: 16),
+              const SizedBox(width: 8),
+              Text(
+                'Duration: ${_formatDuration(sos.sosElapsed)}',
+                style: const TextStyle(
+                  color: AppColors.emergency,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              const Icon(Icons.fiber_manual_record, color: AppColors.emergency, size: 10),
+              const SizedBox(width: 8),
+              const Text(
+                'Recording audio & photos',
+                style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Row(
+            children: [
+              const Icon(Icons.fiber_manual_record, color: AppColors.safe, size: 10),
+              const SizedBox(width: 8),
+              const Text(
+                'Live location streaming',
+                style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _formatDuration(Duration? d) {
+    if (d == null) return '0:00';
+    final m = d.inMinutes.toString().padLeft(2, '0');
+    final s = (d.inSeconds % 60).toString().padLeft(2, '0');
+    return '$m:$s';
+  }
+}

@@ -66,5 +66,23 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<!-- App Transport Security for development HTTP connections -->
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<true/>
+	</dict>
+
+	<!-- Permission descriptions required for iOS -->
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>SafeHer needs access to your location to monitor your safety and route security score.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>SafeHer requires location access in the background to provide continuous SOS tracking even when the screen is locked.</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>SafeHer requires background location to automatically trigger distress alerts to your emergency contacts.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>SafeHer needs camera access to record video evidence during emergency situations.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>SafeHer needs microphone access to record audio evidence and detect vocal distress keywords (screams, calls for help).</string>
 </dict>
 </plist>

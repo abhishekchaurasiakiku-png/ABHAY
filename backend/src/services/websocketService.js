@@ -1,5 +1,4 @@
 const jwt = require('jsonwebtoken');
-const url = require('url');
 
 /**
  * WebSocket service for live location streaming during active SOS.
@@ -24,8 +23,10 @@ const rooms = new Map();
  */
 function initializeWebSocket(wss) {
   wss.on('connection', (ws, req) => {
-    const params = url.parse(req.url, true).query;
-    const { incidentId, token } = params;
+    // Use WHATWG URL API instead of deprecated url.parse()
+    const parsedUrl = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
+    const incidentId = parsedUrl.searchParams.get('incidentId');
+    const token = parsedUrl.searchParams.get('token');
 
     // Authenticate
     let userId;

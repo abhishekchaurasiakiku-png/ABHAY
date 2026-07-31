@@ -34,3 +34,22 @@ ai-service/.env
 # Logs
 *.log
 coverage/
+
+# Secrets and Credentials
+*.env*
+!*.env.example
+!*.env.production
+*firebase-service-account*.json
+*-service-account*.json
+*.pem
+*.key
+*.p12
+*.keystore
+*.jks
+
+# Additional Build & Uploads
+frontend/android/build/
+frontend/ios/build/
+backend/uploads/
+!backend/uploads/.gitkeep
+

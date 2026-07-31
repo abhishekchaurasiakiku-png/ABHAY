@@ -19,9 +19,13 @@ exports.getProfile = async (req, res) => {
 exports.updateProfile = async (req, res) => {
   try {
     const { name, phone } = req.body;
+    const updateFields = {};
+    if (name !== undefined) updateFields.name = name;
+    if (phone !== undefined) updateFields.phone = phone;
+
     const user = await User.findByIdAndUpdate(
       req.userId,
-      { $set: { name, phone } },
+      { $set: updateFields },
       { new: true, runValidators: true }
     );
     if (!user) return res.status(404).json({ error: 'User not found' });
@@ -63,5 +67,26 @@ exports.updateAiSettings = async (req, res) => {
     res.json(user.toSafeJSON());
   } catch (err) {
     res.status(500).json({ error: 'Failed to update AI settings' });
+  }
+};
+
+/**
+ * PUT /api/users/fcm-token
+ *
+ * Register/update the user's FCM device token for push notifications.
+ * Called by the Flutter app after obtaining the FCM token.
+ */
+exports.updateFcmToken = async (req, res) => {
+  try {
+    const { fcmToken } = req.body;
+    const user = await User.findByIdAndUpdate(
+      req.userId,
+      { $set: { fcmToken } },
+      { new: true }
+    );
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    res.json({ message: 'FCM token updated', fcmToken: user.fcmToken });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to update FCM token' });
   }
 };
