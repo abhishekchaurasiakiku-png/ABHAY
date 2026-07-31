@@ -166,12 +166,13 @@ mongoose.connection.on('error', (err) => {
 });
 
 // ─── Start Server ───────────────────────────────────────────
-connectWithRetry().then(() => {
-  server.listen(PORT, () => {
-    console.log(`🚀 SafeHer-AI Backend running on port ${PORT}`);
-    console.log(`📡 WebSocket server ready at ws://localhost:${PORT}/tracking`);
-    console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
-  });
+server.listen(PORT, () => {
+  console.log(`🚀 SafeHer-AI Backend running on port ${PORT}`);
+  console.log(`📡 WebSocket server ready at ws://localhost:${PORT}/tracking`);
+  console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+  
+  // Connect to MongoDB asynchronously in the background
+  connectWithRetry();
 });
 
 // ─── Graceful Shutdown ──────────────────────────────────────
