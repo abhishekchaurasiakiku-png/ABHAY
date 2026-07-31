@@ -8,10 +8,8 @@ class Environment {
   Environment._();
 
   // ─── Production Configurations ─────────────────────────────
-  // TODO: Replace with your actual live server domain (e.g. Render, Railway, AWS).
-  // Note: Production mobile apps require HTTPS/WSS (SSL) to operate.
-  static const String _productionBaseUrl = 'https://your-production-domain.com';
-  static const String _productionWsUrl = 'wss://your-production-domain.com';
+  static const String _productionBaseUrl = 'https://abhay-hwe8.onrender.com';
+  static const String _productionWsUrl = 'wss://abhay-hwe8.onrender.com';
 
   // ─── Development Configurations ────────────────────────────
   // For physical device testing, replace '10.106.1.246' with your computer's local IP address if it changes.
