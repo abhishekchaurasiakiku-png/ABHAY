@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/providers/auth_provider.dart';
 import '../../shared/models/emergency_contact_model.dart';
 import '../../shared/widgets/contact_card.dart';
+import '../auth/login_screen.dart';
 
 /// Profile management page with emergency contacts, AI settings, and privacy.
 class ProfilePage extends StatelessWidget {
@@ -230,7 +233,37 @@ class ProfilePage extends StatelessWidget {
                   icon: Icons.logout,
                   label: 'Logout',
                   color: AppColors.emergency,
-                  onTap: () {},
+                  onTap: () async {
+                    final confirmed = await showDialog<bool>(
+                      context: context,
+                      builder: (ctx) => AlertDialog(
+                        backgroundColor: AppColors.surface,
+                        title: const Text('Logout', style: TextStyle(color: AppColors.textPrimary)),
+                        content: const Text('Are you sure you want to log out of SafeHer-AI?', style: TextStyle(color: AppColors.textSecondary)),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(ctx, false),
+                            child: const Text('Cancel', style: TextStyle(color: AppColors.textSecondary)),
+                          ),
+                          TextButton(
+                            onPressed: () => Navigator.pop(ctx, true),
+                            child: const Text('Logout', style: TextStyle(color: AppColors.emergency)),
+                          ),
+                        ],
+                      ),
+                    );
+
+                    if (confirmed == true && context.mounted) {
+                      await context.read<AuthProvider>().logout();
+                      if (context.mounted) {
+                        Navigator.pushAndRemoveUntil(
+                          context,
+                          MaterialPageRoute(builder: (_) => const LoginScreen()),
+                          (route) => false,
+                        );
+                      }
+                    }
+                  },
                 ),
               ],
             ),

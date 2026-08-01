@@ -44,6 +44,7 @@ class StorageService {
     await _secureStorage.delete(key: ApiConstants.tokenKey);
     await _secureStorage.delete(key: ApiConstants.refreshTokenKey);
     await _secureStorage.delete(key: ApiConstants.userIdKey);
+    await _secureStorage.delete(key: 'user_profile_data');
   }
 
   Future<bool> isLoggedIn() async {
@@ -51,7 +52,7 @@ class StorageService {
     return token != null && token.isNotEmpty;
   }
 
-  // ─── User ID (Secure) ─────────────────────────────────────
+  // ─── User ID & Profile (Secure) ─────────────────────────────
 
   Future<String?> getUserId() async {
     return await _secureStorage.read(key: ApiConstants.userIdKey);
@@ -59,6 +60,14 @@ class StorageService {
 
   Future<void> setUserId(String userId) async {
     await _secureStorage.write(key: ApiConstants.userIdKey, value: userId);
+  }
+
+  Future<String?> getUserProfile() async {
+    return await _secureStorage.read(key: 'user_profile_data');
+  }
+
+  Future<void> setUserProfile(String jsonStr) async {
+    await _secureStorage.write(key: 'user_profile_data', value: jsonStr);
   }
 
   // ─── Onboarding (Non-Sensitive) ────────────────────────────

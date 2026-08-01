@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
 import '../network/api_client.dart';
@@ -35,15 +36,38 @@ class AuthProvider extends ChangeNotifier {
 
     final isLoggedIn = await _storage.isLoggedIn();
     if (isLoggedIn) {
-      // Try to fetch user profile
+      // Load cached profile instantly if available so user stays logged in offline/during cold starts
+      final cachedProfile = await _storage.getUserProfile();
+      if (cachedProfile != null) {
+        try {
+          _user = UserModel.fromJson(jsonDecode(cachedProfile) as Map<String, dynamic>);
+          _setState(AuthState.authenticated);
+        } catch (e) {
+          debugPrint('[Auth] Error parsing cached profile: $e');
+        }
+      }
+
+      // Try to fetch user profile from server in the background
       try {
         final response = await _apiClient.get(ApiConstants.userProfile);
         _user = UserModel.fromJson(response.data as Map<String, dynamic>);
+        await _storage.setUserProfile(jsonEncode(_user!.toJson()));
         _setState(AuthState.authenticated);
       } catch (e) {
-        // Token might be expired
-        await _storage.clearAuthData();
-        _setState(AuthState.unauthenticated);
+        debugPrint('[Auth] checkAuthStatus network call failed: $e');
+        // Only log out if the server explicitly rejects the token with 401 or 403
+        if (e is DioException && (e.response?.statusCode == 401 || e.response?.statusCode == 403)) {
+          await _storage.clearAuthData();
+          _user = null;
+          _setState(AuthState.unauthenticated);
+        } else {
+          // If offline or timeout/cold start, keep them logged in with cached profile or fallback!
+          if (_user == null) {
+            final userId = await _storage.getUserId() ?? 'offline-user';
+            _user = UserModel(id: userId, name: 'SafeHer User', phone: '', email: '');
+          }
+          _setState(AuthState.authenticated);
+        }
       }
     } else {
       _setState(AuthState.unauthenticated);
@@ -89,6 +113,7 @@ class AuthProvider extends ChangeNotifier {
 
       _user = UserModel.fromJson(userData);
       await _storage.setUserId(_user!.id);
+      await _storage.setUserProfile(jsonEncode(_user!.toJson()));
 
       _setState(AuthState.authenticated);
       return true;
@@ -141,6 +166,7 @@ class AuthProvider extends ChangeNotifier {
 
       _user = UserModel.fromJson(userData);
       await _storage.setUserId(_user!.id);
+      await _storage.setUserProfile(jsonEncode(_user!.toJson()));
 
       _setState(AuthState.authenticated);
       return true;

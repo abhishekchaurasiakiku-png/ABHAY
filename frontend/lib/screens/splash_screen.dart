@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
+import 'package:provider/provider.dart';
 import '../core/constants/app_colors.dart';
+import '../core/providers/auth_provider.dart';
 import '../features/auth/login_screen.dart';
+import '../features/home/home_screen.dart';
 
 /// Animated splash screen with pulsing shield icon and gradient background.
 class SplashScreen extends StatefulWidget {
@@ -56,21 +59,35 @@ class _SplashScreenState extends State<SplashScreen>
       _slideController.forward();
     });
 
-    // Navigate after splash
-    Timer(const Duration(seconds: 3), () {
-      if (mounted) {
-        Navigator.pushReplacement(
-          context,
-          PageRouteBuilder(
-            pageBuilder: (_, _, _) => const LoginScreen(),
-            transitionsBuilder: (_, animation, _, child) {
-              return FadeTransition(opacity: animation, child: child);
-            },
-            transitionDuration: const Duration(milliseconds: 600),
-          ),
-        );
-      }
-    });
+    // Verify auth status while splash displays
+    _checkAuthAndNavigate();
+  }
+
+  Future<void> _checkAuthAndNavigate() async {
+    final authProvider = context.read<AuthProvider>();
+    
+    // Check auth and wait for at least 2.5s concurrently for smooth animation
+    await Future.wait([
+      authProvider.checkAuthStatus(),
+      Future.delayed(const Duration(milliseconds: 2500)),
+    ]);
+
+    if (!mounted) return;
+
+    final Widget nextScreen = authProvider.isAuthenticated
+        ? const HomeScreen()
+        : const LoginScreen();
+
+    Navigator.pushReplacement(
+      context,
+      PageRouteBuilder(
+        pageBuilder: (_, _, _) => nextScreen,
+        transitionsBuilder: (_, animation, _, child) {
+          return FadeTransition(opacity: animation, child: child);
+        },
+        transitionDuration: const Duration(milliseconds: 600),
+      ),
+    );
   }
 
   @override

@@ -47,12 +47,14 @@ class UserModel {
 
   Map<String, dynamic> toJson() {
     return {
+      '_id': id,
       'name': name,
       'phone': phone,
       'email': email,
       'emergencyContacts': emergencyContacts.map((c) => c.toJson()).toList(),
       'trustedDevices': trustedDevices,
       'aiSettings': aiSettings.toJson(),
+      if (createdAt != null) 'createdAt': createdAt!.toIso8601String(),
     };
   }
 
