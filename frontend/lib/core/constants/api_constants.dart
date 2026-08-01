@@ -43,9 +43,10 @@ class ApiConstants {
   static String get healthCheck => '$apiBaseUrl/health';
 
   // ─── Timeouts ──────────────────────────────────────────────
-  static const Duration connectionTimeout = Duration(seconds: 10);
-  static const Duration receiveTimeout = Duration(seconds: 15);
-  static const Duration sosTimeout = Duration(seconds: 5); // SOS must be fast
+  // Render free-tier cold starts can take 30–50 s, so we need generous timeouts
+  static const Duration connectionTimeout = Duration(seconds: 60);
+  static const Duration receiveTimeout = Duration(seconds: 60);
+  static const Duration sosTimeout = Duration(seconds: 10); // SOS must be fast
 
   // ─── Storage Keys ──────────────────────────────────────────
   static const String tokenKey = 'auth_token';

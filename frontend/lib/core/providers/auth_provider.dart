@@ -51,6 +51,7 @@ class AuthProvider extends ChangeNotifier {
   }
 
   /// Log in with email and password.
+  /// Retries once on timeout (handles Render cold starts).
   Future<bool> login({
     required String email,
     required String password,
@@ -59,15 +60,23 @@ class AuthProvider extends ChangeNotifier {
     _error = null;
 
     try {
-      final response = await _apiClient.post(
+      final response = await _postWithRetry(
         ApiConstants.login,
         data: {
-          'email': email,
+          'email': email.trim().toLowerCase(),
           'password': password,
         },
       );
 
       final data = response.data as Map<String, dynamic>;
+
+      // Check for error in the response body
+      if (data.containsKey('error')) {
+        _error = data['error'].toString();
+        _setState(AuthState.unauthenticated);
+        return false;
+      }
+
       final token = data['token'] as String;
       final refreshToken = data['refreshToken'] as String?;
       final userData = data['user'] as Map<String, dynamic>;
@@ -91,6 +100,7 @@ class AuthProvider extends ChangeNotifier {
   }
 
   /// Register a new user.
+  /// Retries once on timeout (handles Render cold starts).
   Future<bool> register({
     required String name,
     required String phone,
@@ -101,17 +111,25 @@ class AuthProvider extends ChangeNotifier {
     _error = null;
 
     try {
-      final response = await _apiClient.post(
+      final response = await _postWithRetry(
         ApiConstants.register,
         data: {
-          'name': name,
-          'phone': phone,
-          'email': email,
+          'name': name.trim(),
+          'phone': phone.trim(),
+          'email': email.trim().toLowerCase(),
           'password': password,
         },
       );
 
       final data = response.data as Map<String, dynamic>;
+
+      // Check for error in the response body
+      if (data.containsKey('error')) {
+        _error = data['error'].toString();
+        _setState(AuthState.unauthenticated);
+        return false;
+      }
+
       final token = data['token'] as String;
       final refreshToken = data['refreshToken'] as String?;
       final userData = data['user'] as Map<String, dynamic>;
@@ -133,6 +151,42 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  /// POST with automatic retry on timeout or connection error.
+  /// Handles Render free-tier cold starts which can take 30-50 seconds.
+  Future<Response> _postWithRetry(
+    String path, {
+    dynamic data,
+    int maxRetries = 2,
+  }) async {
+    DioException? lastError;
+
+    for (int attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        debugPrint('[Auth] Attempt $attempt/$maxRetries for $path');
+        final response = await _apiClient.post(path, data: data);
+        return response;
+      } on DioException catch (e) {
+        lastError = e;
+        debugPrint('[Auth] Attempt $attempt failed: ${e.type} - ${e.message}');
+
+        // Only retry on timeout or connection errors (server might be waking up)
+        final isRetryable = e.type == DioExceptionType.connectionTimeout ||
+            e.type == DioExceptionType.receiveTimeout ||
+            e.type == DioExceptionType.sendTimeout ||
+            e.type == DioExceptionType.connectionError;
+
+        if (!isRetryable || attempt >= maxRetries) {
+          rethrow;
+        }
+
+        // Brief pause before retry
+        await Future.delayed(const Duration(seconds: 2));
+      }
+    }
+
+    throw lastError!;
+  }
+
   /// Log out and clear all auth data.
   Future<void> logout() async {
     await _storage.clearAuthData();
@@ -144,8 +198,9 @@ class AuthProvider extends ChangeNotifier {
     if (e is DioException) {
       if (e.type == DioExceptionType.connectionTimeout ||
           e.type == DioExceptionType.receiveTimeout ||
+          e.type == DioExceptionType.sendTimeout ||
           e.type == DioExceptionType.connectionError) {
-        return 'Unable to connect to server. Please check your internet connection.';
+        return 'Server is starting up. Please wait a moment and try again.';
       }
       final responseData = e.response?.data;
       if (responseData is Map && responseData.containsKey('error')) {
@@ -161,8 +216,11 @@ class AuthProvider extends ChangeNotifier {
       if (e.response?.statusCode == 401) return 'Invalid email or password';
       if (e.response?.statusCode == 409) return 'Email already registered';
       if (e.response?.statusCode == 400) return 'Validation failed. Please check input.';
+      if (e.response?.statusCode == 429) return 'Too many attempts. Please wait and try again.';
+      if (e.response?.statusCode == 500) return 'Server error. Please try again in a moment.';
     }
     if (e.toString().contains('SocketException')) return 'No internet connection';
+    debugPrint('[Auth] Unhandled error: $e');
     return 'Something went wrong. Please try again.';
   }
 

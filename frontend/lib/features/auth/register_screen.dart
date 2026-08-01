@@ -37,6 +37,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (!_formKey.currentState!.validate()) return;
 
     final auth = context.read<AuthProvider>();
+    auth.clearError(); // Clear any previous errors
+
     final success = await auth.register(
       name: _nameController.text.trim(),
       phone: _phoneController.text.trim(),

@@ -27,26 +27,37 @@ exports.register = async (req, res) => {
   try {
     const { name, phone, email, password } = req.body;
 
+    // Validate required fields
+    if (!name || !email || !password) {
+      return res.status(400).json({ error: 'Name, email, and password are required' });
+    }
+
     // Check if email already exists
     const existing = await User.findOne({ email: email.toLowerCase() });
     if (existing) {
       return res.status(409).json({ error: 'Email already registered' });
     }
 
-    // Create user
+    // Create user — passwordHash will be hashed by pre-save hook
     const user = new User({
       name,
-      phone,
+      phone: phone || '',
       email: email.toLowerCase(),
-      passwordHash: password, // Will be hashed by pre-save hook
+      passwordHash: password,
     });
 
+    // Save user (first save: hashes password and creates user in DB)
     await user.save();
 
-    // Generate tokens
+    // Generate tokens using the saved user's _id
     const { token, refreshToken } = generateTokens(user._id);
-    user.refreshToken = refreshToken;
-    await user.save();
+
+    // Update only the refreshToken field using findByIdAndUpdate
+    // to avoid triggering the pre-save hook again (prevents any
+    // chance of double-hashing the password)
+    await User.findByIdAndUpdate(user._id, { refreshToken });
+
+    console.log(`[Auth] User registered successfully: ${user.email}`);
 
     res.status(201).json({
       token,
@@ -54,8 +65,20 @@ exports.register = async (req, res) => {
       user: user.toSafeJSON(),
     });
   } catch (err) {
-    console.error('[Auth] Register error:', err.message);
-    res.status(500).json({ error: 'Registration failed' });
+    console.error('[Auth] Register error:', err.message, err.stack);
+
+    // Handle MongoDB duplicate key error
+    if (err.code === 11000) {
+      return res.status(409).json({ error: 'Email already registered' });
+    }
+
+    // Handle validation errors
+    if (err.name === 'ValidationError') {
+      const messages = Object.values(err.errors).map(e => e.message);
+      return res.status(400).json({ error: messages.join(', ') });
+    }
+
+    res.status(500).json({ error: 'Registration failed. Please try again.' });
   }
 };
 
@@ -66,20 +89,30 @@ exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
+    // Validate required fields
+    if (!email || !password) {
+      return res.status(400).json({ error: 'Email and password are required' });
+    }
+
     const user = await User.findOne({ email: email.toLowerCase() });
     if (!user) {
+      console.log(`[Auth] Login failed — email not found: ${email}`);
       return res.status(401).json({ error: 'Invalid email or password' });
     }
 
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
+      console.log(`[Auth] Login failed — wrong password for: ${email}`);
       return res.status(401).json({ error: 'Invalid email or password' });
     }
 
     // Generate tokens
     const { token, refreshToken } = generateTokens(user._id);
-    user.refreshToken = refreshToken;
-    await user.save();
+
+    // Update refreshToken without triggering pre-save hook
+    await User.findByIdAndUpdate(user._id, { refreshToken });
+
+    console.log(`[Auth] User logged in: ${user.email}`);
 
     res.json({
       token,
@@ -87,8 +120,8 @@ exports.login = async (req, res) => {
       user: user.toSafeJSON(),
     });
   } catch (err) {
-    console.error('[Auth] Login error:', err.message);
-    res.status(500).json({ error: 'Login failed' });
+    console.error('[Auth] Login error:', err.message, err.stack);
+    res.status(500).json({ error: 'Login failed. Please try again.' });
   }
 };
 
@@ -111,11 +144,13 @@ exports.refreshToken = async (req, res) => {
     }
 
     const tokens = generateTokens(user._id);
-    user.refreshToken = tokens.refreshToken;
-    await user.save();
+
+    // Update refreshToken without triggering pre-save hook
+    await User.findByIdAndUpdate(user._id, { refreshToken: tokens.refreshToken });
 
     res.json(tokens);
   } catch (err) {
+    console.error('[Auth] Refresh token error:', err.message);
     res.status(401).json({ error: 'Invalid refresh token' });
   }
 };

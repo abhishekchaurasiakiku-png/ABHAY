@@ -31,6 +31,8 @@ class _LoginScreenState extends State<LoginScreen> {
     if (!_formKey.currentState!.validate()) return;
 
     final auth = context.read<AuthProvider>();
+    auth.clearError(); // Clear any previous errors
+
     final success = await auth.login(
       email: _emailController.text.trim(),
       password: _passwordController.text,

@@ -57,6 +57,8 @@ const userSchema = new mongoose.Schema({
 // Hash password before saving
 userSchema.pre('save', async function (next) {
   if (!this.isModified('passwordHash')) return next();
+  // Safety check: if already hashed (bcrypt hash starts with $2b$), skip
+  if (this.passwordHash && this.passwordHash.startsWith('$2b$')) return next();
   this.passwordHash = await bcrypt.hash(this.passwordHash, 12);
   next();
 });
