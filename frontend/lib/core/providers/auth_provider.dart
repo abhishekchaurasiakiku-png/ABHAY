@@ -48,28 +48,25 @@ class AuthProvider extends ChangeNotifier {
         }
       }
 
-      // Try to fetch user profile from server in the background
-      try {
-        final response = await _apiClient.get(ApiConstants.userProfile);
+      if (_user == null) {
+        final userId = await _storage.getUserId() ?? 'offline-user';
+        _user = UserModel(id: userId, name: 'SafeHer User', phone: '', email: '');
+        _setState(AuthState.authenticated);
+      }
+
+      // Perform server refresh asynchronously without blocking app startup!
+      _apiClient.get(ApiConstants.userProfile).then((response) async {
         _user = UserModel.fromJson(response.data as Map<String, dynamic>);
         await _storage.setUserProfile(jsonEncode(_user!.toJson()));
-        _setState(AuthState.authenticated);
-      } catch (e) {
-        debugPrint('[Auth] checkAuthStatus network call failed: $e');
-        // Only log out if the server explicitly rejects the token with 401 or 403
+        notifyListeners();
+      }).catchError((e) async {
+        debugPrint('[Auth] Background sync check failed: $e');
         if (e is DioException && (e.response?.statusCode == 401 || e.response?.statusCode == 403)) {
           await _storage.clearAuthData();
           _user = null;
           _setState(AuthState.unauthenticated);
-        } else {
-          // If offline or timeout/cold start, keep them logged in with cached profile or fallback!
-          if (_user == null) {
-            final userId = await _storage.getUserId() ?? 'offline-user';
-            _user = UserModel(id: userId, name: 'SafeHer User', phone: '', email: '');
-          }
-          _setState(AuthState.authenticated);
         }
-      }
+      });
     } else {
       _setState(AuthState.unauthenticated);
     }
@@ -294,6 +291,45 @@ class AuthProvider extends ChangeNotifier {
       notifyListeners();
     } catch (e) {
       debugPrint('[Auth] Profile image backend sync failed: $e');
+    }
+    return true;
+  }
+
+  /// Real-time update of user profile details (Name, Phone, Blood Group, Medical Notes, Safe Zone)
+  Future<bool> updateProfileDetails({
+    required String name,
+    required String phone,
+    String? bloodGroup,
+    String? medicalNotes,
+    String? homeSafeZone,
+  }) async {
+    if (_user == null) return false;
+    _user = _user!.copyWith(
+      name: name,
+      phone: phone,
+      bloodGroup: bloodGroup,
+      medicalNotes: medicalNotes,
+      homeSafeZone: homeSafeZone,
+    );
+    await _storage.setUserProfile(jsonEncode(_user!.toJson()));
+    notifyListeners();
+
+    try {
+      final response = await _apiClient.put(
+        ApiConstants.userProfile,
+        data: {
+          'name': name,
+          'phone': phone,
+          'bloodGroup': bloodGroup,
+          'medicalNotes': medicalNotes,
+          'homeSafeZone': homeSafeZone,
+        },
+      );
+      _user = UserModel.fromJson(response.data as Map<String, dynamic>);
+      await _storage.setUserProfile(jsonEncode(_user!.toJson()));
+      notifyListeners();
+    } catch (e) {
+      debugPrint('[Auth] Profile details backend sync failed: $e');
     }
     return true;
   }

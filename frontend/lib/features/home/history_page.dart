@@ -224,9 +224,9 @@ class _HistoryPageState extends State<HistoryPage> {
 
   Future<void> _dialNumber(String number, BuildContext context) async {
     final uri = Uri.parse('tel:$number');
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri);
-    } else {
+    try {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Could not initiate dialer to $number')),

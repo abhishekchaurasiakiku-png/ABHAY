@@ -7,6 +7,9 @@ class UserModel {
   final String phone;
   final String email;
   final String? profileImage;
+  final String? bloodGroup;
+  final String? medicalNotes;
+  final String? homeSafeZone;
   final List<EmergencyContact> emergencyContacts;
   final List<String> trustedDevices;
   final AiSettings aiSettings;
@@ -18,6 +21,9 @@ class UserModel {
     required this.phone,
     required this.email,
     this.profileImage,
+    this.bloodGroup,
+    this.medicalNotes,
+    this.homeSafeZone,
     this.emergencyContacts = const [],
     this.trustedDevices = const [],
     this.aiSettings = const AiSettings(),
@@ -31,6 +37,9 @@ class UserModel {
       phone: json['phone'] as String? ?? '',
       email: json['email'] as String? ?? '',
       profileImage: json['profileImage'] as String?,
+      bloodGroup: json['bloodGroup'] as String?,
+      medicalNotes: json['medicalNotes'] as String?,
+      homeSafeZone: json['homeSafeZone'] as String?,
       emergencyContacts: (json['emergencyContacts'] as List<dynamic>?)
               ?.map((e) => EmergencyContact.fromJson(e as Map<String, dynamic>))
               .toList() ??
@@ -55,6 +64,9 @@ class UserModel {
       'phone': phone,
       'email': email,
       if (profileImage != null) 'profileImage': profileImage,
+      if (bloodGroup != null) 'bloodGroup': bloodGroup,
+      if (medicalNotes != null) 'medicalNotes': medicalNotes,
+      if (homeSafeZone != null) 'homeSafeZone': homeSafeZone,
       'emergencyContacts': emergencyContacts.map((c) => c.toJson()).toList(),
       'trustedDevices': trustedDevices,
       'aiSettings': aiSettings.toJson(),
@@ -68,6 +80,9 @@ class UserModel {
     String? phone,
     String? email,
     String? profileImage,
+    String? bloodGroup,
+    String? medicalNotes,
+    String? homeSafeZone,
     List<EmergencyContact>? emergencyContacts,
     List<String>? trustedDevices,
     AiSettings? aiSettings,
@@ -78,6 +93,9 @@ class UserModel {
       phone: phone ?? this.phone,
       email: email ?? this.email,
       profileImage: profileImage ?? this.profileImage,
+      bloodGroup: bloodGroup ?? this.bloodGroup,
+      medicalNotes: medicalNotes ?? this.medicalNotes,
+      homeSafeZone: homeSafeZone ?? this.homeSafeZone,
       emergencyContacts: emergencyContacts ?? this.emergencyContacts,
       trustedDevices: trustedDevices ?? this.trustedDevices,
       aiSettings: aiSettings ?? this.aiSettings,

@@ -58,6 +58,30 @@ class ProfilePage extends StatelessWidget {
                   _buildProfileCard(context, user),
                   const SizedBox(height: 28),
 
+                  // Future-Oriented Emergency & Safe Zone Details Card
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Future-Oriented Emergency Profile 🏥',
+                        style: TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w800),
+                      ),
+                      TextButton.icon(
+                        onPressed: () => _showEditProfileModal(context, user),
+                        icon: const Icon(Icons.edit_outlined, color: Color(0xFF4DEEEA), size: 16),
+                        label: const Text('Edit Details', style: TextStyle(color: Color(0xFF4DEEEA), fontSize: 13, fontWeight: FontWeight.w700)),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  const Text(
+                    'Vital paramedical triage & smart home safe-zone geofencing',
+                    style: TextStyle(color: Color(0xFFB0B3C7), fontSize: 12),
+                  ),
+                  const SizedBox(height: 12),
+                  _buildEmergencyMedicalCard(context, user),
+                  const SizedBox(height: 28),
+
                   // Real-Time AI Guardian Detection Settings
                   const Text(
                     'Real-Time AI Detection Settings 🤖',
@@ -268,8 +292,256 @@ class ProfilePage extends StatelessWidget {
               ],
             ),
           ),
+          const SizedBox(width: 8),
+          IconButton(
+            onPressed: () => _showEditProfileModal(context, user),
+            icon: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: const Color(0xFF6C63FF).withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0xFF6C63FF).withValues(alpha: 0.5)),
+              ),
+              child: const Icon(Icons.edit_note_rounded, color: Color(0xFF4DEEEA), size: 24),
+            ),
+            tooltip: 'Edit Profile & Future-Oriented Details',
+          ),
         ],
       ),
+    );
+  }
+
+  Widget _buildEmergencyMedicalCard(BuildContext context, UserModel? user) {
+    return _GlassCard(
+      borderRadius: 24,
+      padding: const EdgeInsets.all(18),
+      borderColor: const Color(0xFFFF4D9D).withValues(alpha: 0.35),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFF4D9D).withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: const Icon(Icons.favorite_rounded, color: Color(0xFFFF4D9D), size: 22),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Blood Group & Vital Info', style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w800)),
+                    const SizedBox(height: 2),
+                    Text(
+                      user?.bloodGroup?.isNotEmpty == true ? 'Blood Type: ${user!.bloodGroup!}' : 'Blood Group: Not set (Tap Edit)',
+                      style: const TextStyle(color: Color(0xFF4DEEEA), fontSize: 12, fontWeight: FontWeight.w600),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Divider(color: Colors.white.withValues(alpha: 0.1), height: 1),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF6C63FF).withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: const Icon(Icons.medical_services_rounded, color: Color(0xFF6C63FF), size: 22),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Medical Notes / Allergies (ER Ready)', style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w800)),
+                    const SizedBox(height: 2),
+                    Text(
+                      user?.medicalNotes?.isNotEmpty == true ? user!.medicalNotes! : 'No allergies or medical notes recorded yet.',
+                      style: const TextStyle(color: Color(0xFFD0D3E5), fontSize: 12),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Divider(color: Colors.white.withValues(alpha: 0.1), height: 1),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF4DEEEA).withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: const Icon(Icons.home_work_rounded, color: Color(0xFF4DEEEA), size: 22),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Home Safe Zone Geofence Address', style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w800)),
+                    const SizedBox(height: 2),
+                    Text(
+                      user?.homeSafeZone?.isNotEmpty == true ? user!.homeSafeZone! : 'Set residence address for automated arrival check-ins.',
+                      style: const TextStyle(color: Color(0xFFD0D3E5), fontSize: 12),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showEditProfileModal(BuildContext context, UserModel? user) {
+    final nameCtrl = TextEditingController(text: user?.name ?? '');
+    final phoneCtrl = TextEditingController(text: user?.phone ?? '');
+    final bloodCtrl = TextEditingController(text: user?.bloodGroup ?? '');
+    final medicalCtrl = TextEditingController(text: user?.medicalNotes ?? '');
+    final safeZoneCtrl = TextEditingController(text: user?.homeSafeZone ?? '');
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color(0xFF161929),
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      builder: (ctx) {
+        return Padding(
+          padding: EdgeInsets.only(
+            left: 24,
+            right: 24,
+            top: 24,
+            bottom: MediaQuery.of(ctx).viewInsets.bottom + 24,
+          ),
+          child: SingleChildScrollView(
+            physics: const BouncingScrollPhysics(),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Edit Future-Oriented Profile ✏️',
+                      style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w800),
+                    ),
+                    IconButton(
+                      onPressed: () => Navigator.pop(ctx),
+                      icon: const Icon(Icons.close_rounded, color: Colors.white54),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                const Text(
+                  'Update real-time display name, emergency phone, and future medical/geofence alerts.',
+                  style: TextStyle(color: Color(0xFFB0B3C7), fontSize: 13),
+                ),
+                const SizedBox(height: 20),
+                _buildModalTextField(label: 'Full Display Name', controller: nameCtrl, icon: Icons.person_outline_rounded),
+                const SizedBox(height: 14),
+                _buildModalTextField(label: 'Emergency Contact Phone', controller: phoneCtrl, icon: Icons.phone_android_rounded, keyboardType: TextInputType.phone),
+                const SizedBox(height: 14),
+                _buildModalTextField(label: 'Blood Group (e.g. O+, B-, AB+)', controller: bloodCtrl, icon: Icons.favorite_outline_rounded),
+                const SizedBox(height: 14),
+                _buildModalTextField(label: 'Medical Notes & Allergies (ER Support)', controller: medicalCtrl, icon: Icons.medical_information_outlined, maxLines: 2),
+                const SizedBox(height: 14),
+                _buildModalTextField(label: 'Home Geofence Safe Zone Address', controller: safeZoneCtrl, icon: Icons.my_location_rounded, maxLines: 2),
+                const SizedBox(height: 26),
+                SizedBox(
+                  width: double.infinity,
+                  height: 52,
+                  child: ElevatedButton.icon(
+                    onPressed: () async {
+                      if (nameCtrl.text.trim().isEmpty) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Display Name cannot be empty')),
+                        );
+                        return;
+                      }
+                      Navigator.pop(ctx);
+                      await context.read<AuthProvider>().updateProfileDetails(
+                            name: nameCtrl.text.trim(),
+                            phone: phoneCtrl.text.trim(),
+                            bloodGroup: bloodCtrl.text.trim(),
+                            medicalNotes: medicalCtrl.text.trim(),
+                            homeSafeZone: safeZoneCtrl.text.trim(),
+                          );
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('✅ Profile details & future safety settings updated in real time!'),
+                            backgroundColor: Color(0xFF00E676),
+                          ),
+                        );
+                      }
+                    },
+                    icon: const Icon(Icons.check_circle_rounded, size: 22),
+                    label: const Text('Save Real-Time Changes', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF4DEEEA),
+                      foregroundColor: const Color(0xFF0A0E21),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildModalTextField({
+    required String label,
+    required TextEditingController controller,
+    required IconData icon,
+    TextInputType keyboardType = TextInputType.text,
+    int maxLines = 1,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: const TextStyle(color: Color(0xFFD0D3E5), fontSize: 13, fontWeight: FontWeight.w600)),
+        const SizedBox(height: 6),
+        TextField(
+          controller: controller,
+          style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w500),
+          keyboardType: keyboardType,
+          maxLines: maxLines,
+          decoration: InputDecoration(
+            prefixIcon: Icon(icon, color: const Color(0xFF6C63FF), size: 20),
+            filled: true,
+            fillColor: const Color(0xFF22263A),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: const BorderSide(color: Color(0xFF4DEEEA), width: 1.5),
+            ),
+          ),
+        ),
+      ],
     );
   }
 

@@ -98,9 +98,9 @@ class SosPage extends StatelessWidget {
                         child: ElevatedButton.icon(
                           onPressed: () async {
                             final uri = Uri.parse('tel:112');
-                            if (await canLaunchUrl(uri)) {
-                              await launchUrl(uri);
-                            } else {
+                            try {
+                              await launchUrl(uri, mode: LaunchMode.externalApplication);
+                            } catch (e) {
                               if (context.mounted) {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   const SnackBar(content: Text('Could not initiate emergency dialer to 112')),

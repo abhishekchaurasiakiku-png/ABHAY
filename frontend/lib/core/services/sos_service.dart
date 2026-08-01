@@ -114,10 +114,8 @@ class SosService {
     try {
       final primaryPhone = contacts.isNotEmpty ? contacts.first.phone : '112';
       final callUri = Uri.parse('tel:$primaryPhone');
-      if (await canLaunchUrl(callUri)) {
-        await launchUrl(callUri);
-        print('[SOS] Real-time emergency call placed automatically to $primaryPhone!');
-      }
+      await launchUrl(callUri, mode: LaunchMode.externalApplication);
+      print('[SOS] Real-time emergency call placed automatically to $primaryPhone!');
     } catch (e) {
       print('[SOS] Could not trigger automatic calling: $e');
     }

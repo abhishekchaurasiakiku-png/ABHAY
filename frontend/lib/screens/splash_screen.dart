@@ -66,10 +66,10 @@ class _SplashScreenState extends State<SplashScreen>
   Future<void> _checkAuthAndNavigate() async {
     final authProvider = context.read<AuthProvider>();
     
-    // Check auth and wait for at least 2.5s concurrently for smooth animation
+    // Check auth with ultra-fast 400ms transition
     await Future.wait([
       authProvider.checkAuthStatus(),
-      Future.delayed(const Duration(milliseconds: 2500)),
+      Future.delayed(const Duration(milliseconds: 400)),
     ]);
 
     if (!mounted) return;
@@ -85,7 +85,7 @@ class _SplashScreenState extends State<SplashScreen>
         transitionsBuilder: (_, animation, _, child) {
           return FadeTransition(opacity: animation, child: child);
         },
-        transitionDuration: const Duration(milliseconds: 600),
+        transitionDuration: const Duration(milliseconds: 300),
       ),
     );
   }

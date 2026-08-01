@@ -433,9 +433,9 @@ class HomePage extends StatelessWidget {
 
   Future<void> _launchPhone(String phone, BuildContext context) async {
     final uri = Uri.parse('tel:$phone');
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri);
-    } else {
+    try {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Could not initiate phone dialer to $phone')),
