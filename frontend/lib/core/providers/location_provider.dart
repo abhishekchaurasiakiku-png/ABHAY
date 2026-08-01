@@ -41,6 +41,13 @@ class LocationProvider extends ChangeNotifier {
     await startTracking();
   }
 
+  /// Fetch and update immediate current GPS position.
+  Future<Position?> getCurrentPosition() async {
+    _currentPosition = await _locationService.getCurrentPosition();
+    notifyListeners();
+    return _currentPosition;
+  }
+
   /// Start tracking.
   Future<void> startTracking() async {
     if (_isTracking) return;
