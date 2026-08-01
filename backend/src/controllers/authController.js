@@ -78,7 +78,7 @@ exports.register = async (req, res) => {
       return res.status(400).json({ error: messages.join(', ') });
     }
 
-    res.status(500).json({ error: 'Registration failed. Please try again.' });
+    res.status(500).json({ error: 'Registration failed. Please try again.', debug: err.message, type: err.name });
   }
 };
 
@@ -121,7 +121,7 @@ exports.login = async (req, res) => {
     });
   } catch (err) {
     console.error('[Auth] Login error:', err.message, err.stack);
-    res.status(500).json({ error: 'Login failed. Please try again.' });
+    res.status(500).json({ error: 'Login failed. Please try again.', debug: err.message, type: err.name });
   }
 };
 
