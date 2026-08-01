@@ -167,7 +167,7 @@ class HomePage extends StatelessWidget {
         Center(
           child: GestureDetector(
             onTap: () {
-              context.read<SosProvider>().triggerSos();
+              context.read<SosProvider>().triggerManualSos();
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
                   content: Text('🚨 EMERGENCY SOS TRIGGERED - Alerting contacts & streaming location!'),
