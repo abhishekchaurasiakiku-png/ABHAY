@@ -2,19 +2,40 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 
 /**
+ * Helper to safely sanitize and validate timespan strings from environment variables
+ * (strips extraneous quotes/whitespace, defaults if invalid).
+ */
+const getExpiry = (envVal, fallback) => {
+  if (!envVal) return fallback;
+  const cleaned = String(envVal).trim().replace(/^["']|["']$/g, '');
+  try {
+    // Test if jsonwebtoken accepts this timespan format without throwing
+    jwt.sign({ test: 1 }, 'test-secret', { expiresIn: cleaned });
+    return cleaned;
+  } catch (err) {
+    console.warn(`[Auth] Invalid expiresIn value "${envVal}" in env, falling back to "${fallback}"`);
+    return fallback;
+  }
+};
+
+/**
  * Generate JWT access and refresh tokens.
  */
 const generateTokens = (userId) => {
+  const secret = process.env.JWT_SECRET || 'default-secret-key-change-in-prod';
+  const accessExpiry = getExpiry(process.env.JWT_EXPIRES_IN, '7d');
+  const refreshExpiry = getExpiry(process.env.JWT_REFRESH_EXPIRES_IN, '30d');
+
   const token = jwt.sign(
     { userId },
-    process.env.JWT_SECRET,
-    { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
+    secret,
+    { expiresIn: accessExpiry }
   );
 
   const refreshToken = jwt.sign(
     { userId, type: 'refresh' },
-    process.env.JWT_SECRET,
-    { expiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '30d' }
+    secret,
+    { expiresIn: refreshExpiry }
   );
 
   return { token, refreshToken };
@@ -78,7 +99,7 @@ exports.register = async (req, res) => {
       return res.status(400).json({ error: messages.join(', ') });
     }
 
-    res.status(500).json({ error: 'Registration failed. Please try again.', debug: err.message, type: err.name });
+    res.status(500).json({ error: 'Registration failed. Please try again.' });
   }
 };
 
@@ -121,7 +142,7 @@ exports.login = async (req, res) => {
     });
   } catch (err) {
     console.error('[Auth] Login error:', err.message, err.stack);
-    res.status(500).json({ error: 'Login failed. Please try again.', debug: err.message, type: err.name });
+    res.status(500).json({ error: 'Login failed. Please try again.' });
   }
 };
 
