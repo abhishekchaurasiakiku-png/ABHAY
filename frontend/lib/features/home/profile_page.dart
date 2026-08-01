@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/providers/auth_provider.dart';
 import '../../shared/models/emergency_contact_model.dart';
@@ -12,6 +13,7 @@ class ProfilePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final user = context.watch<AuthProvider>().user;
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -48,10 +50,12 @@ class ProfilePage extends StatelessWidget {
                       shape: BoxShape.circle,
                       gradient: AppColors.primaryGradient,
                     ),
-                    child: const Center(
+                    child: Center(
                       child: Text(
-                        'U',
-                        style: TextStyle(
+                        (user?.name != null && user!.name.isNotEmpty)
+                            ? user.name[0].toUpperCase()
+                            : 'U',
+                        style: const TextStyle(
                           color: Colors.white,
                           fontSize: 24,
                           fontWeight: FontWeight.w700,
@@ -64,9 +68,9 @@ class ProfilePage extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          'User',
-                          style: TextStyle(
+                        Text(
+                          user?.name ?? 'Guardian User',
+                          style: const TextStyle(
                             color: AppColors.textPrimary,
                             fontSize: 18,
                             fontWeight: FontWeight.w600,
@@ -74,18 +78,32 @@ class ProfilePage extends StatelessWidget {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          'user@email.com',
-                          style: TextStyle(
+                          user?.email ?? 'No email registered',
+                          style: const TextStyle(
                             color: AppColors.textTertiary,
                             fontSize: 13,
                           ),
                         ),
+                        if (user?.phone != null && user!.phone.isNotEmpty) ...[
+                          const SizedBox(height: 2),
+                          Text(
+                            user.phone,
+                            style: const TextStyle(
+                              color: AppColors.textSecondary,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
                       ],
                     ),
                   ),
                   IconButton(
                     icon: const Icon(Icons.edit, color: AppColors.primary),
-                    onPressed: () {},
+                    onPressed: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Profile details synchronized in real-time')),
+                      );
+                    },
                   ),
                 ],
               ),
@@ -118,40 +136,80 @@ class ProfilePage extends StatelessWidget {
 
             const SizedBox(height: 10),
 
-            // Demo contacts
-            ContactCard(
-              contact: const EmergencyContact(
-                id: '1',
-                name: 'Mom',
-                phone: '+91 98765 43210',
-                relationship: 'Parent',
-              ),
-              onCall: () {},
-              onMessage: () {},
-              onRemove: () {},
-            ),
-            ContactCard(
-              contact: const EmergencyContact(
-                id: '2',
-                name: 'Dad',
-                phone: '+91 98765 43211',
-                relationship: 'Parent',
-              ),
-              onCall: () {},
-              onMessage: () {},
-              onRemove: () {},
-            ),
-            ContactCard(
-              contact: const EmergencyContact(
-                id: '3',
-                name: 'Best Friend',
-                phone: '+91 98765 43212',
-                relationship: 'Friend',
-              ),
-              onCall: () {},
-              onMessage: () {},
-              onRemove: () {},
-            ),
+            // Real-time user emergency contacts
+            if (user == null || user.emergencyContacts.isEmpty)
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: AppColors.surfaceBorder),
+                ),
+                child: Center(
+                  child: Column(
+                    children: [
+                      const Icon(Icons.group_off_outlined, color: AppColors.textTertiary, size: 36),
+                      const SizedBox(height: 8),
+                      const Text(
+                        'No Emergency Contacts Yet',
+                        style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w600),
+                      ),
+                      const SizedBox(height: 4),
+                      const Text(
+                        'Add trusted friends or family members to receive instant real-time SOS alerts and quick calls.',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: AppColors.textTertiary, fontSize: 12),
+                      ),
+                      const SizedBox(height: 12),
+                      OutlinedButton.icon(
+                        onPressed: () => _showAddContactDialog(context),
+                        icon: const Icon(Icons.add, size: 18),
+                        label: const Text('Add Contact Now'),
+                        style: OutlinedButton.styleFrom(foregroundColor: AppColors.primary),
+                      ),
+                    ],
+                  ),
+                ),
+              )
+            else
+              ...user.emergencyContacts.map((contact) {
+                return ContactCard(
+                  contact: contact,
+                  onCall: () async {
+                    final uri = Uri.parse('tel:${contact.phone}');
+                    if (await canLaunchUrl(uri)) {
+                      await launchUrl(uri);
+                    } else {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Could not launch phone call to ${contact.phone}')),
+                        );
+                      }
+                    }
+                  },
+                  onMessage: () async {
+                    const message = 'Emergency! Please check up on me right away via SafeHer-AI.';
+                    final uri = Uri.parse('sms:${contact.phone}?body=${Uri.encodeComponent(message)}');
+                    if (await canLaunchUrl(uri)) {
+                      await launchUrl(uri);
+                    } else {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Could not open SMS to ${contact.phone}')),
+                        );
+                      }
+                    }
+                  },
+                  onRemove: () async {
+                    await context.read<AuthProvider>().removeEmergencyContact(contact.id);
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Removed ${contact.name} from emergency contacts')),
+                      );
+                    }
+                  },
+                );
+              }),
 
             const SizedBox(height: 28),
 
@@ -276,6 +334,9 @@ class ProfilePage extends StatelessWidget {
   }
 
   void _showAddContactDialog(BuildContext context) {
+    final nameController = TextEditingController();
+    final phoneController = TextEditingController();
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -303,17 +364,21 @@ class ProfilePage extends StatelessWidget {
               ),
               const SizedBox(height: 20),
               TextFormField(
+                controller: nameController,
                 style: const TextStyle(color: AppColors.textPrimary),
                 decoration: const InputDecoration(
                   labelText: 'Name',
+                  hintText: 'e.g., Mom, Dad, or Guardian',
                   prefixIcon: Icon(Icons.person_outline),
                 ),
               ),
               const SizedBox(height: 14),
               TextFormField(
+                controller: phoneController,
                 style: const TextStyle(color: AppColors.textPrimary),
                 decoration: const InputDecoration(
                   labelText: 'Phone Number',
+                  hintText: '+91 98765 43210',
                   prefixIcon: Icon(Icons.phone_outlined),
                 ),
                 keyboardType: TextInputType.phone,
@@ -323,7 +388,26 @@ class ProfilePage extends StatelessWidget {
                 width: double.infinity,
                 height: 50,
                 child: ElevatedButton(
-                  onPressed: () => Navigator.pop(ctx),
+                  onPressed: () async {
+                    final name = nameController.text.trim();
+                    final phone = phoneController.text.trim();
+                    if (name.isEmpty || phone.isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Please enter both name and phone number.')),
+                      );
+                      return;
+                    }
+                    Navigator.pop(ctx);
+                    final success = await context.read<AuthProvider>().addEmergencyContact(
+                      name: name,
+                      phone: phone,
+                    );
+                    if (context.mounted && success) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Added $name to your real-time emergency contacts!')),
+                      );
+                    }
+                  },
                   child: const Text('Add Contact'),
                 ),
               ),

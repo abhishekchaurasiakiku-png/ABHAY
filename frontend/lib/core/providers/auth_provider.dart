@@ -5,6 +5,7 @@ import '../network/api_client.dart';
 import '../storage/storage_service.dart';
 import '../constants/api_constants.dart';
 import '../../shared/models/user_model.dart';
+import '../../shared/models/emergency_contact_model.dart';
 
 /// Authentication state management.
 ///
@@ -211,6 +212,69 @@ class AuthProvider extends ChangeNotifier {
     }
 
     throw lastError!;
+  }
+
+  /// Real-time addition of emergency contact
+  Future<bool> addEmergencyContact({
+    required String name,
+    required String phone,
+    String relationship = 'Guardian',
+  }) async {
+    if (_user == null) return false;
+
+    final newContact = EmergencyContact(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      name: name.trim(),
+      phone: phone.trim(),
+      relationship: relationship,
+    );
+
+    final updatedContacts = [..._user!.emergencyContacts, newContact];
+    _user = _user!.copyWith(emergencyContacts: updatedContacts);
+    await _storage.setUserProfile(jsonEncode(_user!.toJson()));
+    notifyListeners();
+
+    try {
+      final response = await _apiClient.put(
+        ApiConstants.userContacts,
+        data: {
+          'emergencyContacts': updatedContacts.map((e) => e.toJson()).toList(),
+        },
+      );
+      _user = UserModel.fromJson(response.data as Map<String, dynamic>);
+      await _storage.setUserProfile(jsonEncode(_user!.toJson()));
+      notifyListeners();
+    } catch (e) {
+      debugPrint('[Auth] Backend sync failed, kept in local real-time storage: $e');
+    }
+    return true;
+  }
+
+  /// Real-time removal of emergency contact
+  Future<bool> removeEmergencyContact(String contactId) async {
+    if (_user == null) return false;
+
+    final updatedContacts = _user!.emergencyContacts
+        .where((c) => c.id != contactId && c.name != contactId)
+        .toList();
+    _user = _user!.copyWith(emergencyContacts: updatedContacts);
+    await _storage.setUserProfile(jsonEncode(_user!.toJson()));
+    notifyListeners();
+
+    try {
+      final response = await _apiClient.put(
+        ApiConstants.userContacts,
+        data: {
+          'emergencyContacts': updatedContacts.map((e) => e.toJson()).toList(),
+        },
+      );
+      _user = UserModel.fromJson(response.data as Map<String, dynamic>);
+      await _storage.setUserProfile(jsonEncode(_user!.toJson()));
+      notifyListeners();
+    } catch (e) {
+      debugPrint('[Auth] Backend removal sync failed: $e');
+    }
+    return true;
   }
 
   /// Log out and clear all auth data.

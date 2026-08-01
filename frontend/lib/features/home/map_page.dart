@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/providers/location_provider.dart';
 
 /// Map page with safety zone overlays and safe routing.
 ///
@@ -66,6 +69,33 @@ class MapPage extends StatelessWidget {
                         color: AppColors.textTertiary,
                         fontSize: 13,
                       ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  ElevatedButton.icon(
+                    onPressed: () async {
+                      final loc = context.read<LocationProvider>();
+                      final pos = loc.currentPosition;
+                      final uri = pos != null
+                          ? Uri.parse('https://www.google.com/maps/search/?api=1&query=${pos.latitude},${pos.longitude}')
+                          : Uri.parse('https://www.google.com/maps');
+                      if (await canLaunchUrl(uri)) {
+                        await launchUrl(uri, mode: LaunchMode.externalApplication);
+                      } else {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Could not launch Google Maps app')),
+                          );
+                        }
+                      }
+                    },
+                    icon: const Icon(Icons.explore, size: 20),
+                    label: const Text('Open Real-Time Google Maps'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                     ),
                   ),
                 ],

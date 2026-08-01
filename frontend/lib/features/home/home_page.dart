@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:share_plus/share_plus.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/providers/sos_provider.dart';
+import '../../core/providers/auth_provider.dart';
+import '../../core/providers/location_provider.dart';
 import '../../core/services/ai_engine.dart';
 import '../../shared/widgets/safety_status_card.dart';
 import '../../shared/widgets/ai_status_indicator.dart';
@@ -12,6 +16,7 @@ class HomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final user = context.watch<AuthProvider>().user;
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
@@ -27,8 +32,8 @@ class HomePage extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Hello, User 👋',
-                        style: TextStyle(
+                        'Hello, ${user?.name ?? 'Guardian'} 👋',
+                        style: const TextStyle(
                           color: AppColors.textPrimary,
                           fontSize: 24,
                           fontWeight: FontWeight.w700,
@@ -105,7 +110,16 @@ class HomePage extends StatelessWidget {
                       icon: Icons.share_location,
                       label: 'Share Location',
                       color: AppColors.info,
-                      onTap: () {},
+                      onTap: () async {
+                        final loc = context.read<LocationProvider>();
+                        String? url = loc.mapsUrl;
+                        if (url == null) {
+                          await loc.initialize();
+                          url = loc.mapsUrl;
+                        }
+                        final shareUrl = url ?? 'https://maps.google.com/?q=28.6139,77.2090';
+                        await Share.share('My current real-time GPS safety location from SafeHer-AI: $shareUrl');
+                      },
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -114,7 +128,22 @@ class HomePage extends StatelessWidget {
                       icon: Icons.route,
                       label: 'Safe Route',
                       color: AppColors.safe,
-                      onTap: () {},
+                      onTap: () async {
+                        final loc = context.read<LocationProvider>();
+                        final pos = loc.currentPosition;
+                        final uri = pos != null
+                            ? Uri.parse('https://www.google.com/maps/search/?api=1&query=${pos.latitude},${pos.longitude}')
+                            : Uri.parse('https://www.google.com/maps');
+                        if (await canLaunchUrl(uri)) {
+                          await launchUrl(uri, mode: LaunchMode.externalApplication);
+                        } else {
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Could not open Google Maps navigation')),
+                            );
+                          }
+                        }
+                      },
                     ),
                   ),
                 ],

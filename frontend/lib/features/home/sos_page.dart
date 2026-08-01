@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/providers/sos_provider.dart';
 import '../../shared/widgets/sos_button.dart';
@@ -87,6 +88,37 @@ class SosPage extends StatelessWidget {
                             ),
                           ),
                         ),
+
+                      const SizedBox(height: 12),
+
+                      // Real Emergency Call (112 / Police)
+                      SizedBox(
+                        width: double.infinity,
+                        height: 50,
+                        child: ElevatedButton.icon(
+                          onPressed: () async {
+                            final uri = Uri.parse('tel:112');
+                            if (await canLaunchUrl(uri)) {
+                              await launchUrl(uri);
+                            } else {
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('Could not initiate emergency dialer to 112')),
+                                );
+                              }
+                            }
+                          },
+                          icon: const Icon(Icons.call, size: 20),
+                          label: const Text('Call Emergency Services (112)'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.emergency,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                        ),
+                      ),
 
                       const SizedBox(height: 12),
 

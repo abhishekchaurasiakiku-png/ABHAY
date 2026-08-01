@@ -80,7 +80,7 @@ void main() async {
 
         // Location
         ChangeNotifierProvider(
-          create: (_) => LocationProvider(locationService: locationService),
+          create: (_) => LocationProvider(locationService: locationService)..initialize(),
         ),
 
         // Incidents
