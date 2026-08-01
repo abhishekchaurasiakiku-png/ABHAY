@@ -151,21 +151,22 @@ const PORT = process.env.PORT || 3000;
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/safeher-ai';
 
 const MONGO_OPTIONS = {
-  serverSelectionTimeoutMS: 5000,
+  serverSelectionTimeoutMS: 30000,
   heartbeatFrequencyMS: 10000,
 };
 
 async function connectWithRetry(retries = 5, delay = 3000) {
   for (let attempt = 1; attempt <= retries; attempt++) {
     try {
+      console.log(`⏳ MongoDB connection attempt ${attempt}/${retries}...`);
       await mongoose.connect(MONGODB_URI, MONGO_OPTIONS);
       console.log('✅ MongoDB connected');
       return;
     } catch (err) {
       console.error(`❌ MongoDB connection attempt ${attempt}/${retries} failed:`, err.message);
       if (attempt === retries) {
-        console.error('❌ All MongoDB connection attempts exhausted. Exiting.');
-        process.exit(1);
+        console.error('❌ All MongoDB connection attempts exhausted. Starting server anyway for health checks.');
+        return; // Don't exit — let health check report degraded status
       }
       const backoff = delay * Math.pow(2, attempt - 1);
       console.log(`⏳ Retrying in ${backoff / 1000}s...`);
@@ -188,14 +189,22 @@ mongoose.connection.on('error', (err) => {
 });
 
 // ─── Start Server ───────────────────────────────────────────
-server.listen(PORT, () => {
-  console.log(`🚀 SafeHer-AI Backend running on port ${PORT}`);
-  console.log(`📡 WebSocket server ready at ws://localhost:${PORT}/tracking`);
-  console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
-  
-  // Connect to MongoDB asynchronously in the background
-  connectWithRetry();
-});
+// IMPORTANT: Connect to MongoDB FIRST, then start listening.
+// This prevents 500 errors when requests arrive before MongoDB is ready.
+async function startServer() {
+  // Connect to MongoDB first
+  await connectWithRetry();
+
+  // Then start accepting HTTP requests
+  server.listen(PORT, () => {
+    console.log(`🚀 SafeHer-AI Backend running on port ${PORT}`);
+    console.log(`📡 WebSocket server ready at ws://localhost:${PORT}/tracking`);
+    console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+    console.log(`📊 MongoDB state: ${mongoose.connection.readyState === 1 ? 'connected' : 'not connected'}`);
+  });
+}
+
+startServer();
 
 // ─── Graceful Shutdown ──────────────────────────────────────
 function gracefulShutdown(signal) {
