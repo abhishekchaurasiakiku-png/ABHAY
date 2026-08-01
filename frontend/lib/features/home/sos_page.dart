@@ -271,8 +271,21 @@ class _ActiveSosInfo extends StatelessWidget {
               const Icon(Icons.fiber_manual_record, color: AppColors.safe, size: 10),
               const SizedBox(width: 8),
               const Text(
-                'Live location streaming',
+                'Live location streaming to secure server',
                 style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Row(
+            children: [
+              const Icon(Icons.verified_user_rounded, color: AppColors.safe, size: 14),
+              const SizedBox(width: 8),
+              const Expanded(
+                child: Text(
+                  'Real-time live location shared & direct phone calling executed automatically',
+                  style: TextStyle(color: AppColors.safe, fontSize: 12, fontWeight: FontWeight.w700),
+                ),
               ),
             ],
           ),

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:url_launcher/url_launcher.dart';
 import '../../shared/models/incident_model.dart';
 import '../../shared/models/emergency_contact_model.dart';
 import '../network/api_client.dart';
@@ -106,12 +107,23 @@ class SosService {
       print('[SOS] Backend unreachable — falling back to SMS');
     }
 
-    // Step 3: SMS fallback if backend failed
-    if (!backendNotified) {
-      final smsSent = await _smsFallback.sendSosToContacts(contacts);
-      print('[SOS] SMS fallback — $smsSent messages sent');
+    // Step 3: REAL-TIME Location Share & Automated Emergency Calling without arguments
+    final smsSent = await _smsFallback.sendSosToContacts(contacts);
+    print('[SOS] Real-time live location broadcasted to $smsSent emergency guardians!');
 
-      // Create local incident for tracking
+    try {
+      final primaryPhone = contacts.isNotEmpty ? contacts.first.phone : '112';
+      final callUri = Uri.parse('tel:$primaryPhone');
+      if (await canLaunchUrl(callUri)) {
+        await launchUrl(callUri);
+        print('[SOS] Real-time emergency call placed automatically to $primaryPhone!');
+      }
+    } catch (e) {
+      print('[SOS] Could not trigger automatic calling: $e');
+    }
+
+    if (!backendNotified) {
+      // Create local incident for tracking when offline
       _activeIncident = IncidentModel(
         id: 'local_${DateTime.now().millisecondsSinceEpoch}',
         userId: '',

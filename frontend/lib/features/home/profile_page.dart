@@ -11,6 +11,7 @@ import '../../shared/models/emergency_contact_model.dart';
 import '../../shared/models/user_model.dart';
 import '../../shared/widgets/contact_card.dart';
 import '../auth/login_screen.dart';
+import 'privacy_policy_page.dart';
 
 /// Redesigned Profile Management with Glassmorphism, real avatar changes, and live AI controls.
 class ProfilePage extends StatelessWidget {
@@ -89,6 +90,49 @@ class ProfilePage extends StatelessWidget {
                   const SizedBox(height: 8),
 
                   _buildContactsSection(context, user?.emergencyContacts ?? []),
+                  const SizedBox(height: 28),
+
+                  // Trust & Privacy Policy
+                  const Text(
+                    'Trust & Data Transparency 🛡️',
+                    style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w800),
+                  ),
+                  const SizedBox(height: 12),
+
+                  _GlassCard(
+                    borderRadius: 24,
+                    padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+                    borderColor: const Color(0xFF3B82F6).withValues(alpha: 0.35),
+                    child: InkWell(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const PrivacyPolicyPage()),
+                        );
+                      },
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(color: const Color(0xFF3B82F6).withValues(alpha: 0.2), borderRadius: BorderRadius.circular(14)),
+                            child: const Icon(Icons.privacy_tip_rounded, color: Color(0xFF3B82F6), size: 24),
+                          ),
+                          const SizedBox(width: 14),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: const [
+                                Text('Privacy & Safety Data Policy', style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w800)),
+                                SizedBox(height: 2),
+                                Text('How your live location and audio data are shielded', style: TextStyle(color: Color(0xFFB0B3C7), fontSize: 11)),
+                              ],
+                            ),
+                          ),
+                          const Icon(Icons.arrow_forward_ios_rounded, color: Colors.white54, size: 16),
+                        ],
+                      ),
+                    ),
+                  ),
                   const SizedBox(height: 28),
 
                   // Logout Action Button
@@ -326,25 +370,23 @@ class ProfilePage extends StatelessWidget {
         children: [
           // Voice Distress Toggle
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(color: const Color(0xFF4DEEEA).withValues(alpha: 0.2), borderRadius: BorderRadius.circular(12)),
-                    child: const Icon(Icons.mic_rounded, color: Color(0xFF4DEEEA), size: 20),
-                  ),
-                  const SizedBox(width: 12),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: const [
-                      Text('Voice Distress Recognition', style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w700)),
-                      Text('Listens for "Help me" / "Bachao"', style: TextStyle(color: Color(0xFFB0B3C7), fontSize: 11)),
-                    ],
-                  ),
-                ],
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(color: const Color(0xFF4DEEEA).withValues(alpha: 0.2), borderRadius: BorderRadius.circular(12)),
+                child: const Icon(Icons.mic_rounded, color: Color(0xFF4DEEEA), size: 20),
               ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: const [
+                    Text('Voice Distress Recognition', style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w700), maxLines: 1, overflow: TextOverflow.ellipsis),
+                    Text('Listens for "Help me" / "Bachao"', style: TextStyle(color: Color(0xFFB0B3C7), fontSize: 11), maxLines: 1, overflow: TextOverflow.ellipsis),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
               Switch(
                 value: settings.voiceDetectionEnabled,
                 activeColor: const Color(0xFF4DEEEA),
@@ -390,25 +432,23 @@ class ProfilePage extends StatelessWidget {
 
           // Motion & Fall Detection Toggle
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(color: const Color(0xFFFF4D9D).withValues(alpha: 0.2), borderRadius: BorderRadius.circular(12)),
-                    child: const Icon(Icons.sensors_rounded, color: Color(0xFFFF4D9D), size: 20),
-                  ),
-                  const SizedBox(width: 12),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: const [
-                      Text('Motion & Fall Detection', style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w700)),
-                      Text('Detects rapid impacts & struggles', style: TextStyle(color: Color(0xFFB0B3C7), fontSize: 11)),
-                    ],
-                  ),
-                ],
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(color: const Color(0xFFFF4D9D).withValues(alpha: 0.2), borderRadius: BorderRadius.circular(12)),
+                child: const Icon(Icons.sensors_rounded, color: Color(0xFFFF4D9D), size: 20),
               ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: const [
+                    Text('Motion & Fall Detection', style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w700), maxLines: 1, overflow: TextOverflow.ellipsis),
+                    Text('Detects rapid impacts & struggles', style: TextStyle(color: Color(0xFFB0B3C7), fontSize: 11), maxLines: 1, overflow: TextOverflow.ellipsis),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
               Switch(
                 value: settings.motionDetectionEnabled,
                 activeColor: const Color(0xFFFF4D9D),
