@@ -18,10 +18,11 @@ exports.getProfile = async (req, res) => {
  */
 exports.updateProfile = async (req, res) => {
   try {
-    const { name, phone } = req.body;
+    const { name, phone, profileImage } = req.body;
     const updateFields = {};
     if (name !== undefined) updateFields.name = name;
     if (phone !== undefined) updateFields.phone = phone;
+    if (profileImage !== undefined) updateFields.profileImage = profileImage;
 
     const user = await User.findByIdAndUpdate(
       req.userId,

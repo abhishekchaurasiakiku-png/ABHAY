@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -142,21 +143,48 @@ class HomePage extends StatelessWidget {
               color: Color(0xFF161929),
               shape: BoxShape.circle,
             ),
-            child: Center(
-              child: Text(
-                (user?.name != null && user!.name.isNotEmpty)
-                    ? user.name[0].toUpperCase()
-                    : 'G',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 20,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
+            child: ClipOval(
+              child: _renderHeaderAvatar(user?.profileImage, user?.name),
             ),
           ),
         ),
       ],
+    );
+  }
+
+  Widget _renderHeaderAvatar(String? profileImage, String? name) {
+    if (profileImage != null && profileImage.isNotEmpty) {
+      if (profileImage.startsWith('base64:')) {
+        try {
+          final bytes = base64Decode(profileImage.substring(7));
+          return Image.memory(bytes, fit: BoxFit.cover, width: double.infinity, height: double.infinity);
+        } catch (_) {}
+      } else if (profileImage.startsWith('preset:')) {
+        final iconType = profileImage.substring(7);
+        IconData iconData = Icons.shield_rounded;
+        Color iconColor = const Color(0xFF4DEEEA);
+        if (iconType == 'queen') {
+          iconData = Icons.workspace_premium_rounded;
+          iconColor = const Color(0xFFFF4D9D);
+        } else if (iconType == 'angel') {
+          iconData = Icons.health_and_safety_rounded;
+          iconColor = const Color(0xFFFFB88C);
+        } else if (iconType == 'star') {
+          iconData = Icons.auto_awesome_rounded;
+          iconColor = const Color(0xFF6C63FF);
+        }
+        return Center(child: Icon(iconData, color: iconColor, size: 26));
+      }
+    }
+    return Center(
+      child: Text(
+        (name != null && name.isNotEmpty) ? name[0].toUpperCase() : 'G',
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 20,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
     );
   }
 

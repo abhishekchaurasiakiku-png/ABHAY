@@ -277,6 +277,48 @@ class AuthProvider extends ChangeNotifier {
     return true;
   }
 
+  /// Real-time update of profile image (base64 string or custom avatar icon)
+  Future<bool> updateProfileImage(String imageStr) async {
+    if (_user == null) return false;
+    _user = _user!.copyWith(profileImage: imageStr);
+    await _storage.setUserProfile(jsonEncode(_user!.toJson()));
+    notifyListeners();
+
+    try {
+      final response = await _apiClient.put(
+        ApiConstants.userProfile,
+        data: {'profileImage': imageStr},
+      );
+      _user = UserModel.fromJson(response.data as Map<String, dynamic>);
+      await _storage.setUserProfile(jsonEncode(_user!.toJson()));
+      notifyListeners();
+    } catch (e) {
+      debugPrint('[Auth] Profile image backend sync failed: $e');
+    }
+    return true;
+  }
+
+  /// Real-time update of AI sensitivity & detection sensor settings
+  Future<bool> updateAiSettings(AiSettings settings) async {
+    if (_user == null) return false;
+    _user = _user!.copyWith(aiSettings: settings);
+    await _storage.setUserProfile(jsonEncode(_user!.toJson()));
+    notifyListeners();
+
+    try {
+      final response = await _apiClient.put(
+        ApiConstants.userAiSettings,
+        data: settings.toJson(),
+      );
+      _user = UserModel.fromJson(response.data as Map<String, dynamic>);
+      await _storage.setUserProfile(jsonEncode(_user!.toJson()));
+      notifyListeners();
+    } catch (e) {
+      debugPrint('[Auth] AI settings backend sync failed: $e');
+    }
+    return true;
+  }
+
   /// Log out and clear all auth data.
   Future<void> logout() async {
     await _storage.clearAuthData();

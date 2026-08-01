@@ -95,6 +95,9 @@ const validateUpdateProfile = [
     .optional()
     .trim()
     .matches(/^\+?[\d\s\-()]{7,20}$/).withMessage('Invalid phone number format'),
+  body('profileImage')
+    .optional()
+    .isString().withMessage('Profile image must be a string'),
   handleValidationErrors,
 ];
 

@@ -6,6 +6,7 @@ class UserModel {
   final String name;
   final String phone;
   final String email;
+  final String? profileImage;
   final List<EmergencyContact> emergencyContacts;
   final List<String> trustedDevices;
   final AiSettings aiSettings;
@@ -16,6 +17,7 @@ class UserModel {
     required this.name,
     required this.phone,
     required this.email,
+    this.profileImage,
     this.emergencyContacts = const [],
     this.trustedDevices = const [],
     this.aiSettings = const AiSettings(),
@@ -28,6 +30,7 @@ class UserModel {
       name: json['name'] as String? ?? '',
       phone: json['phone'] as String? ?? '',
       email: json['email'] as String? ?? '',
+      profileImage: json['profileImage'] as String?,
       emergencyContacts: (json['emergencyContacts'] as List<dynamic>?)
               ?.map((e) => EmergencyContact.fromJson(e as Map<String, dynamic>))
               .toList() ??
@@ -51,6 +54,7 @@ class UserModel {
       'name': name,
       'phone': phone,
       'email': email,
+      if (profileImage != null) 'profileImage': profileImage,
       'emergencyContacts': emergencyContacts.map((c) => c.toJson()).toList(),
       'trustedDevices': trustedDevices,
       'aiSettings': aiSettings.toJson(),
@@ -63,6 +67,7 @@ class UserModel {
     String? name,
     String? phone,
     String? email,
+    String? profileImage,
     List<EmergencyContact>? emergencyContacts,
     List<String>? trustedDevices,
     AiSettings? aiSettings,
@@ -72,6 +77,7 @@ class UserModel {
       name: name ?? this.name,
       phone: phone ?? this.phone,
       email: email ?? this.email,
+      profileImage: profileImage ?? this.profileImage,
       emergencyContacts: emergencyContacts ?? this.emergencyContacts,
       trustedDevices: trustedDevices ?? this.trustedDevices,
       aiSettings: aiSettings ?? this.aiSettings,

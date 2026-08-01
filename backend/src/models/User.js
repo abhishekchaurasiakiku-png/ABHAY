@@ -38,6 +38,9 @@ const userSchema = new mongoose.Schema({
     lowercase: true,
     trim: true,
   },
+  profileImage: {
+    type: String,
+  },
   passwordHash: {
     type: String,
     required: true,
