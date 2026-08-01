@@ -113,7 +113,7 @@ class _MapPageState extends State<MapPage> {
                                 target: center,
                                 zoom: 15,
                               ),
-                              myLocationEnabled: true,
+                              myLocationEnabled: loc.hasPermission && pos != null,
                               myLocationButtonEnabled: false,
                               zoomControlsEnabled: false,
                               circles: {

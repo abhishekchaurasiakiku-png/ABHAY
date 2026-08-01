@@ -31,9 +31,12 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFF0B0D19),
       extendBody: true, // Allows content and aurora background to slide smoothly under floating navbar
-      body: IndexedStack(
-        index: _currentIndex,
-        children: _pages,
+      body: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 250),
+        child: KeyedSubtree(
+          key: ValueKey(_currentIndex),
+          child: _pages[_currentIndex],
+        ),
       ),
       bottomNavigationBar: SafeArea(
         child: Container(
