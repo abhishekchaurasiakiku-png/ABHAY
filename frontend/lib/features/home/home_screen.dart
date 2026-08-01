@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
 import 'home_page.dart';
@@ -6,7 +7,7 @@ import 'sos_page.dart';
 import 'history_page.dart';
 import 'profile_page.dart';
 
-/// Redesigned home shell with premium bottom nav and floating SOS.
+/// Redesigned home shell with premium Floating Glassmorphism Bottom Navigation.
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -21,61 +22,88 @@ class _HomeScreenState extends State<HomeScreen> {
     HomePage(),
     MapPage(),
     SosPage(),
-    HistoryPage(),
+    HistoryPage(), // Serves as Support & Incident Logs
     ProfilePage(),
   ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
-      body: _pages[_currentIndex],
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          border: Border(
-            top: BorderSide(
-              color: AppColors.surfaceBorder,
-              width: 1,
-            ),
+      backgroundColor: const Color(0xFF0B0D19),
+      extendBody: true, // Allows content and aurora background to slide smoothly under floating navbar
+      body: IndexedStack(
+        index: _currentIndex,
+        children: _pages,
+      ),
+      bottomNavigationBar: SafeArea(
+        child: Container(
+          margin: const EdgeInsets.fromLTRB(18, 0, 18, 16),
+          height: 74,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(38),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF6C63FF).withValues(alpha: 0.25),
+                blurRadius: 24,
+                spreadRadius: 2,
+                offset: const Offset(0, 8),
+              ),
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.4),
+                blurRadius: 16,
+                offset: const Offset(0, 4),
+              ),
+            ],
           ),
-        ),
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _NavItem(
-                  icon: Icons.home_rounded,
-                  label: 'Home',
-                  isActive: _currentIndex == 0,
-                  onTap: () => setState(() => _currentIndex = 0),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(38),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF151829).withValues(alpha: 0.85),
+                  borderRadius: BorderRadius.circular(38),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.18),
+                    width: 1.2,
+                  ),
                 ),
-                _NavItem(
-                  icon: Icons.map_rounded,
-                  label: 'Map',
-                  isActive: _currentIndex == 1,
-                  onTap: () => setState(() => _currentIndex = 1),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    _NavItem(
+                      icon: Icons.home_rounded,
+                      label: 'Home',
+                      isActive: _currentIndex == 0,
+                      onTap: () => setState(() => _currentIndex = 0),
+                    ),
+                    _NavItem(
+                      icon: Icons.explore_rounded,
+                      label: 'Map',
+                      isActive: _currentIndex == 1,
+                      onTap: () => setState(() => _currentIndex = 1),
+                    ),
+                    // Floating center glowing SOS button
+                    _CenterSosNavButton(
+                      isActive: _currentIndex == 2,
+                      onTap: () => setState(() => _currentIndex = 2),
+                    ),
+                    _NavItem(
+                      icon: Icons.support_agent_rounded,
+                      label: 'Support',
+                      isActive: _currentIndex == 3,
+                      onTap: () => setState(() => _currentIndex = 3),
+                    ),
+                    _NavItem(
+                      icon: Icons.person_rounded,
+                      label: 'Profile',
+                      isActive: _currentIndex == 4,
+                      onTap: () => setState(() => _currentIndex = 4),
+                    ),
+                  ],
                 ),
-                // Center SOS button
-                _CenterSosNavButton(
-                  isActive: _currentIndex == 2,
-                  onTap: () => setState(() => _currentIndex = 2),
-                ),
-                _NavItem(
-                  icon: Icons.history_rounded,
-                  label: 'History',
-                  isActive: _currentIndex == 3,
-                  onTap: () => setState(() => _currentIndex = 3),
-                ),
-                _NavItem(
-                  icon: Icons.person_rounded,
-                  label: 'Profile',
-                  isActive: _currentIndex == 4,
-                  onTap: () => setState(() => _currentIndex = 4),
-                ),
-              ],
+              ),
             ),
           ),
         ),
@@ -101,24 +129,24 @@ class _NavItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(24),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
               icon,
-              color: isActive ? AppColors.primary : AppColors.textTertiary,
+              color: isActive ? const Color(0xFF4DEEEA) : const Color(0xFF8B8EAB),
               size: 24,
             ),
             const SizedBox(height: 4),
             Text(
               label,
               style: TextStyle(
-                color: isActive ? AppColors.primary : AppColors.textTertiary,
+                color: isActive ? const Color(0xFF4DEEEA) : const Color(0xFF8B8EAB),
                 fontSize: 11,
-                fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
+                fontWeight: isActive ? FontWeight.w800 : FontWeight.w500,
               ),
             ),
           ],
@@ -142,27 +170,27 @@ class _CenterSosNavButton extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: 56,
-        height: 56,
+        width: 54,
+        height: 54,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          gradient: isActive
-              ? AppColors.emergencyGradient
-              : const LinearGradient(
-                  colors: [Color(0xFFFF3B5C), Color(0xFFE91E63)],
-                ),
+          gradient: const LinearGradient(
+            colors: [Color(0xFFFF4D9D), Color(0xFFFF1E56), Color(0xFFD50000)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
           boxShadow: [
             BoxShadow(
-              color: AppColors.emergency.withValues(alpha: 0.4),
-              blurRadius: 12,
-              spreadRadius: 1,
+              color: const Color(0xFFFF4D9D).withValues(alpha: 0.55),
+              blurRadius: 16,
+              spreadRadius: 2,
             ),
           ],
         ),
         child: const Icon(
-          Icons.sos,
+          Icons.sos_rounded,
           color: Colors.white,
-          size: 26,
+          size: 28,
         ),
       ),
     );
