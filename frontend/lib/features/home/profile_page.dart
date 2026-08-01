@@ -625,7 +625,10 @@ class ProfilePage extends StatelessWidget {
                   ),
                   onPressed: () async {
                     if (formKey.currentState!.validate()) {
-                      await context.read<AuthProvider>().addEmergencyContact(nameController.text.trim(), phoneController.text.trim());
+                      await context.read<AuthProvider>().addEmergencyContact(
+                        name: nameController.text.trim(),
+                        phone: phoneController.text.trim(),
+                      );
                       if (ctx.mounted) Navigator.pop(ctx);
                     }
                   },
