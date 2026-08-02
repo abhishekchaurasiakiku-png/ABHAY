@@ -18,7 +18,7 @@ import 'core/providers/sos_provider.dart';
 import 'core/providers/location_provider.dart';
 import 'core/providers/incident_provider.dart';
 import 'core/providers/user_provider.dart';
-import 'screens/splash_screen.dart';
+import 'screens/auth_wrapper.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -105,9 +105,9 @@ class SafeHerApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'SafeHer AI',
+      title: 'ABHAYA',
       theme: AppTheme.darkTheme,
-      home: const SplashScreen(),
+      home: const AuthWrapper(),
     );
   }
 }

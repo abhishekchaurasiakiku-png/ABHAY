@@ -1,5 +1,5 @@
 name: frontend
-description: "SafeHer-AI — Zero-touch autonomous safety guardian for women."
+description: "ABHAYA — Zero-touch autonomous safety guardian for women."
 publish_to: 'none'
 
 version: 1.0.0+1
@@ -43,8 +43,6 @@ dependencies:
   record: ^6.2.1
   camera: ^0.11.1
 
-  # SMS / Telephony handled via SMS URI / platform channel fallbacks
-
   # Notifications
   flutter_local_notifications: ^19.0.0
   firebase_core: ^3.13.0
@@ -67,6 +65,17 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
+  flutter_launcher_icons: ^0.13.1
+
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  remove_alpha_ios: true
+  image_path: "assets/ABHAY.png"
+  adaptive_icon_background: "#EAE7E1"
+  adaptive_icon_foreground: "assets/ABHAY.png"
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/ABHAY.png
