@@ -90,8 +90,12 @@ class SosService {
           'location': location.toGeoJson(),
           'timestamp': DateTime.now().toIso8601String(),
           'contactPhones': contacts
-              .where((c) => c.notifyOnSos)
+              .where((c) => c.notifyOnSos && c.phone.isNotEmpty)
               .map((c) => c.phone)
+              .toList(),
+          'contactEmails': contacts
+              .where((c) => c.notifyOnSos && c.email.isNotEmpty)
+              .map((c) => c.email)
               .toList(),
         },
       );

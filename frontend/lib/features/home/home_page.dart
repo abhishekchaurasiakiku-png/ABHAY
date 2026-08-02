@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:flutter_phone_direct_caller/flutter_phone_direct_caller.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/providers/sos_provider.dart';
 import '../../core/providers/auth_provider.dart';
@@ -195,12 +196,64 @@ class HomePage extends StatelessWidget {
         Center(
           child: GestureDetector(
             onTap: () {
-              context.read<SosProvider>().triggerManualSos();
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('🚨 EMERGENCY SOS TRIGGERED - Alerting contacts & streaming location!'),
-                  backgroundColor: Color(0xFFFF1E56),
-                  duration: Duration(seconds: 4),
+              showDialog(
+                context: context,
+                builder: (ctx) => AlertDialog(
+                  backgroundColor: const Color(0xFF161929),
+                  title: const Text('🚨 SOS Alert', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                  content: const Text(
+                    'Do you want to send your live location and alert all trusted emergency contacts via email?',
+                    style: TextStyle(color: Color(0xFFD0D3E5)),
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () {
+                        Navigator.pop(ctx);
+                        context.read<SosProvider>().triggerManualSos();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('🚨 SOS Triggered (Without Email)'),
+                            backgroundColor: Color(0xFFFF1E56),
+                            duration: Duration(seconds: 2),
+                          ),
+                        );
+                      },
+                      child: const Text('SOS Only', style: TextStyle(color: Colors.white54)),
+                    ),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFFF1E56)),
+                      onPressed: () async {
+                        Navigator.pop(ctx);
+                        context.read<SosProvider>().triggerManualSos();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('🚨 EMERGENCY SOS - Alerting via Email!'),
+                            backgroundColor: Color(0xFFFF1E56),
+                            duration: Duration(seconds: 4),
+                          ),
+                        );
+                        
+                        final user = context.read<AuthProvider>().user;
+                        if (user != null && user.emergencyContacts.isNotEmpty) {
+                          final emails = user.emergencyContacts
+                              .map((c) => c.email)
+                              .where((e) => e.isNotEmpty)
+                              .join(',');
+                          if (emails.isNotEmpty) {
+                            final locProvider = context.read<LocationProvider>();
+                            final url = locProvider.mapsUrl ?? 'https://maps.google.com/?q=28.6139,77.2090';
+                            final uri = Uri.parse('mailto:$emails?subject=EMERGENCY SOS ALERT&body=EMERGENCY ALERT: I need immediate assistance! My real-time GPS location: $url');
+                            await launchUrl(uri, mode: LaunchMode.externalApplication);
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('No trusted contact emails found.')),
+                            );
+                          }
+                        }
+                      },
+                      child: const Text('Send Alert & SOS', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                    ),
+                  ],
                 ),
               );
             },
@@ -432,13 +485,12 @@ class HomePage extends StatelessWidget {
   }
 
   Future<void> _launchPhone(String phone, BuildContext context) async {
-    final uri = Uri.parse('tel:$phone');
     try {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
+      await FlutterPhoneDirectCaller.callNumber(phone);
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Could not initiate phone dialer to $phone')),
+          SnackBar(content: Text('Could not initiate direct call to $phone')),
         );
       }
     }
@@ -852,22 +904,30 @@ class _GuardianAndScoreRow extends StatelessWidget {
                     SizedBox(
                       width: 68,
                       height: 68,
-                      child: CircularProgressIndicator(
-                        value: 0.94,
-                        strokeWidth: 6.5,
-                        backgroundColor: Colors.white.withValues(alpha: 0.1),
-                        valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF4DEEEA)),
-                        strokeCap: StrokeCap.round,
+                      child: Consumer<LocationProvider>(
+                        builder: (context, locProvider, child) {
+                          return CircularProgressIndicator(
+                            value: locProvider.safetyScore,
+                            strokeWidth: 6.5,
+                            backgroundColor: Colors.white.withValues(alpha: 0.1),
+                            valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF4DEEEA)),
+                            strokeCap: StrokeCap.round,
+                          );
+                        }
                       ),
                     ),
                     Column(
                       mainAxisAlignment: MainAxisAlignment.center,
-                      children: const [
-                        Text(
-                          '94%',
-                          style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w900),
+                      children: [
+                        Consumer<LocationProvider>(
+                          builder: (context, locProvider, child) {
+                            return Text(
+                              '${(locProvider.safetyScore * 100).toInt()}%',
+                              style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w900),
+                            );
+                          }
                         ),
-                        Text(
+                        const Text(
                           'SAFE',
                           style: TextStyle(color: Color(0xFF4DEEEA), fontSize: 8.5, fontWeight: FontWeight.w800, letterSpacing: 1),
                         ),

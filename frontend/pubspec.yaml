@@ -34,7 +34,6 @@ dependencies:
 
   # Location & Maps
   geolocator: ^14.0.0
-  google_maps_flutter: ^2.14.0
 
   # Sensors & AI
   sensors_plus: ^7.0.1
@@ -60,6 +59,9 @@ dependencies:
   url_launcher: ^6.3.2
   share_plus: ^12.0.2
   image_picker: ^1.1.2
+  flutter_map: ^8.3.1
+  latlong2: ^0.10.1
+  flutter_phone_direct_caller: ^2.2.1
 
 dev_dependencies:
   flutter_test:

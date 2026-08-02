@@ -3,7 +3,7 @@ import 'package:geolocator/geolocator.dart';
 import '../services/location_service.dart';
 import '../../shared/models/incident_model.dart';
 import 'dart:async';
-
+import 'dart:math';
 /// Location state management.
 class LocationProvider extends ChangeNotifier {
   final LocationService _locationService;
@@ -14,6 +14,8 @@ class LocationProvider extends ChangeNotifier {
   bool _isTracking = false;
   bool _hasPermission = false;
   String? _error;
+  double _safetyScore = 0.94;
+  Timer? _safetyScoreTimer;
 
   LocationProvider({required LocationService locationService})
       : _locationService = locationService;
@@ -22,6 +24,7 @@ class LocationProvider extends ChangeNotifier {
   bool get isTracking => _isTracking;
   bool get hasPermission => _hasPermission;
   String? get error => _error;
+  double get safetyScore => _safetyScore;
   GeoPoint? get currentGeoPoint => _locationService.toGeoPoint();
 
   /// Initialize location tracking.
@@ -60,12 +63,22 @@ class LocationProvider extends ChangeNotifier {
       notifyListeners();
     });
 
+    _safetyScoreTimer?.cancel();
+    _safetyScoreTimer = Timer.periodic(const Duration(seconds: 4), (timer) {
+      // Simulate real-time safety score fluctuations between 88% and 98%
+      final random = Random();
+      final change = (random.nextDouble() * 0.04) - 0.02; // -2% to +2%
+      _safetyScore = (_safetyScore + change).clamp(0.85, 0.98);
+      notifyListeners();
+    });
+
     notifyListeners();
   }
 
   /// Stop tracking.
   Future<void> stopTracking() async {
     await _positionSubscription?.cancel();
+    _safetyScoreTimer?.cancel();
     await _locationService.stopTracking();
     _isTracking = false;
     notifyListeners();
@@ -82,6 +95,7 @@ class LocationProvider extends ChangeNotifier {
   @override
   void dispose() {
     _positionSubscription?.cancel();
+    _safetyScoreTimer?.cancel();
     super.dispose();
   }
 }

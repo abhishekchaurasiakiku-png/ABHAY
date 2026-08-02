@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:flutter_phone_direct_caller/flutter_phone_direct_caller.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/providers/auth_provider.dart';
 import '../../core/providers/sos_provider.dart';
@@ -62,9 +63,13 @@ class ProfilePage extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
-                        'Future-Oriented Emergency Profile 🏥',
-                        style: TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w800),
+                      const Expanded(
+                        child: Text(
+                          'Emergency & Medical Profile 🏥',
+                          style: TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w800),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
                       TextButton.icon(
                         onPressed: () => _showEditProfileModal(context, user),
@@ -101,9 +106,13 @@ class ProfilePage extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
-                        'Trusted Emergency Contacts 👥',
-                        style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w800),
+                      Expanded(
+                        child: const Text(
+                          'Trusted Emergency Contacts 👥',
+                          style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w800),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
                       IconButton(
                         onPressed: () => _showAddContactBottomSheet(context),
@@ -283,9 +292,13 @@ class ProfilePage extends StatelessWidget {
                   children: [
                     const Icon(Icons.phone_android_rounded, color: Color(0xFFFF4D9D), size: 15),
                     const SizedBox(width: 6),
-                    Text(
-                      user?.phone ?? '+91 99999 99999',
-                      style: const TextStyle(color: Color(0xFFD0D3E5), fontSize: 13, fontWeight: FontWeight.w600),
+                    Expanded(
+                      child: Text(
+                        user?.phone ?? '+91 99999 99999',
+                        style: const TextStyle(color: Color(0xFFD0D3E5), fontSize: 13, fontWeight: FontWeight.w600),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
                   ],
                 ),
@@ -438,9 +451,13 @@ class ProfilePage extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text(
-                      'Edit Future-Oriented Profile ✏️',
-                      style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w800),
+                    const Expanded(
+                      child: Text(
+                        'Edit Future-Oriented Profile ✏️',
+                        style: TextStyle(color: Colors.white, fontSize: 19, fontWeight: FontWeight.w800),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
                     IconButton(
                       onPressed: () => Navigator.pop(ctx),
@@ -811,64 +828,120 @@ class ProfilePage extends StatelessWidget {
           borderRadius: 22,
           padding: const EdgeInsets.all(16),
           borderColor: const Color(0xFFFF4D9D).withValues(alpha: 0.3),
-          child: Row(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFF4D9D).withValues(alpha: 0.2),
-                  shape: BoxShape.circle,
-                  border: Border.all(color: const Color(0xFFFF4D9D).withValues(alpha: 0.5)),
-                ),
-                child: Center(
-                  child: Text(
-                    contact.name.isNotEmpty ? contact.name[0].toUpperCase() : 'G',
-                    style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w800),
+              Row(
+                children: [
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFF4D9D).withValues(alpha: 0.2),
+                      shape: BoxShape.circle,
+                      border: Border.all(color: const Color(0xFFFF4D9D).withValues(alpha: 0.5)),
+                    ),
+                    child: Center(
+                      child: Text(
+                        contact.name.isNotEmpty ? contact.name[0].toUpperCase() : 'G',
+                        style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w800),
+                      ),
+                    ),
                   ),
-                ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(contact.name, style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w800), maxLines: 1, overflow: TextOverflow.ellipsis),
+                        const SizedBox(height: 2),
+                        Row(
+                          children: [
+                            const Icon(Icons.phone_rounded, color: Color(0xFFFF4D9D), size: 13),
+                            const SizedBox(width: 4),
+                            Expanded(
+                              child: Text(contact.phone, style: const TextStyle(color: Color(0xFFD0D3E5), fontSize: 13, fontWeight: FontWeight.w600), maxLines: 1, overflow: TextOverflow.ellipsis),
+                            ),
+                          ],
+                        ),
+                        if (contact.email.isNotEmpty) ...[
+                          const SizedBox(height: 2),
+                          Row(
+                            children: [
+                              const Icon(Icons.email_rounded, color: Color(0xFF4DEEEA), size: 13),
+                              const SizedBox(width: 4),
+                              Expanded(
+                                child: Text(contact.email, style: const TextStyle(color: Color(0xFFB0B3C7), fontSize: 12), maxLines: 1, overflow: TextOverflow.ellipsis),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.delete_outline_rounded, color: Colors.white54, size: 20),
+                    onPressed: () {
+                      context.read<AuthProvider>().removeEmergencyContact(contact.id.isNotEmpty ? contact.id : contact.name);
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Contact removed from guardian list')));
+                    },
+                  ),
+                ],
               ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(contact.name, style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w800)),
-                    Text(contact.phone, style: const TextStyle(color: Color(0xFFD0D3E5), fontSize: 13)),
-                  ],
-                ),
-              ),
-              // Call action
-              IconButton(
-                icon: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(color: const Color(0xFF00E676).withValues(alpha: 0.2), shape: BoxShape.circle),
-                  child: const Icon(Icons.call_rounded, color: Color(0xFF00E676), size: 18),
-                ),
-                onPressed: () async {
-                  final uri = Uri.parse('tel:${contact.phone}');
-                  if (await canLaunchUrl(uri)) await launchUrl(uri);
-                },
-              ),
-              // Message action
-              IconButton(
-                icon: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(color: const Color(0xFF3B82F6).withValues(alpha: 0.2), shape: BoxShape.circle),
-                  child: const Icon(Icons.message_rounded, color: Color(0xFF3B82F6), size: 18),
-                ),
-                onPressed: () async {
-                  final uri = Uri.parse('sms:${contact.phone}?body=EMERGENCY ALERT: I need immediate assistance from SafeHer-AI!');
-                  if (await canLaunchUrl(uri)) await launchUrl(uri);
-                },
-              ),
-              // Delete action
-              IconButton(
-                icon: const Icon(Icons.delete_outline_rounded, color: Colors.white54, size: 20),
-                onPressed: () {
-                  context.read<AuthProvider>().removeEmergencyContact(contact.id ?? contact.name);
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Contact removed from guardian list')));
-                },
+              const SizedBox(height: 12),
+              Divider(color: Colors.white.withValues(alpha: 0.1), height: 1),
+              const SizedBox(height: 10),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  TextButton.icon(
+                    style: TextButton.styleFrom(
+                      backgroundColor: const Color(0xFF00E676).withValues(alpha: 0.15),
+                      foregroundColor: const Color(0xFF00E676),
+                      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 14),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    icon: const Icon(Icons.call_rounded, size: 16),
+                    label: const Text('Call', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
+                    onPressed: () async {
+                      try {
+                        await FlutterPhoneDirectCaller.callNumber(contact.phone);
+                      } catch (e) {
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Could not initiate direct call')));
+                      }
+                    },
+                  ),
+                  TextButton.icon(
+                    style: TextButton.styleFrom(
+                      backgroundColor: const Color(0xFF3B82F6).withValues(alpha: 0.15),
+                      foregroundColor: const Color(0xFF3B82F6),
+                      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 14),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    icon: const Icon(Icons.message_rounded, size: 16),
+                    label: const Text('SMS', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
+                    onPressed: () async {
+                      final uri = Uri.parse('sms:${contact.phone}?body=EMERGENCY ALERT: I need immediate assistance from SafeHer-AI!');
+                      await launchUrl(uri, mode: LaunchMode.externalApplication);
+                    },
+                  ),
+                  if (contact.email.isNotEmpty)
+                    TextButton.icon(
+                      style: TextButton.styleFrom(
+                        backgroundColor: const Color(0xFF6C63FF).withValues(alpha: 0.15),
+                        foregroundColor: const Color(0xFF4DEEEA),
+                        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 14),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      icon: const Icon(Icons.email_rounded, size: 16),
+                      label: const Text('Email', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
+                      onPressed: () async {
+                        final uri = Uri.parse('mailto:${contact.email}?subject=EMERGENCY SOS ALERT&body=EMERGENCY ALERT: I need immediate assistance! Please check my real-time GPS coordinates!');
+                        await launchUrl(uri, mode: LaunchMode.externalApplication);
+                      },
+                    ),
+                ],
               ),
             ],
           ),
@@ -880,6 +953,7 @@ class ProfilePage extends StatelessWidget {
   void _showAddContactBottomSheet(BuildContext context) {
     final nameController = TextEditingController();
     final phoneController = TextEditingController();
+    final emailController = TextEditingController();
     final formKey = GlobalKey<FormState>();
 
     showModalBottomSheet(
@@ -889,66 +963,83 @@ class ProfilePage extends StatelessWidget {
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(28))),
       builder: (ctx) => Padding(
         padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom, left: 24, right: 24, top: 24),
-        child: Form(
-          key: formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text('Add Trusted Guardian 🛡️', style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w800)),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: nameController,
-                style: const TextStyle(color: Colors.white),
-                decoration: InputDecoration(
-                  labelText: 'Guardian Name',
-                  labelStyle: const TextStyle(color: Colors.white70),
-                  filled: true,
-                  fillColor: Colors.white.withValues(alpha: 0.05),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
-                  prefixIcon: const Icon(Icons.person, color: Color(0xFF4DEEEA)),
-                ),
-                validator: (v) => v == null || v.isEmpty ? 'Please enter name' : null,
-              ),
-              const SizedBox(height: 14),
-              TextFormField(
-                controller: phoneController,
-                keyboardType: TextInputType.phone,
-                style: const TextStyle(color: Colors.white),
-                decoration: InputDecoration(
-                  labelText: 'Phone Number',
-                  labelStyle: const TextStyle(color: Colors.white70),
-                  filled: true,
-                  fillColor: Colors.white.withValues(alpha: 0.05),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
-                  prefixIcon: const Icon(Icons.phone, color: Color(0xFFFF4D9D)),
-                ),
-                validator: (v) => v == null || v.isEmpty ? 'Please enter phone number' : null,
-              ),
-              const SizedBox(height: 24),
-              SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF4DEEEA),
-                    foregroundColor: const Color(0xFF0B0D19),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: SingleChildScrollView(
+          child: Form(
+            key: formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Add Trusted Guardian 🛡️', style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w800)),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: nameController,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: InputDecoration(
+                    labelText: 'Guardian Name',
+                    labelStyle: const TextStyle(color: Colors.white70),
+                    filled: true,
+                    fillColor: Colors.white.withValues(alpha: 0.05),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+                    prefixIcon: const Icon(Icons.person, color: Color(0xFF4DEEEA)),
                   ),
-                  onPressed: () async {
-                    if (formKey.currentState!.validate()) {
-                      await context.read<AuthProvider>().addEmergencyContact(
-                        name: nameController.text.trim(),
-                        phone: phoneController.text.trim(),
-                      );
-                      if (ctx.mounted) Navigator.pop(ctx);
-                    }
-                  },
-                  child: const Text('Save Emergency Guardian', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
+                  validator: (v) => v == null || v.isEmpty ? 'Please enter name' : null,
                 ),
-              ),
-              const SizedBox(height: 24),
-            ],
+                const SizedBox(height: 14),
+                TextFormField(
+                  controller: phoneController,
+                  keyboardType: TextInputType.phone,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: InputDecoration(
+                    labelText: 'Phone Number (with country code e.g. +91)',
+                    labelStyle: const TextStyle(color: Colors.white70),
+                    filled: true,
+                    fillColor: Colors.white.withValues(alpha: 0.05),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+                    prefixIcon: const Icon(Icons.phone, color: Color(0xFFFF4D9D)),
+                  ),
+                  validator: (v) => v == null || v.isEmpty ? 'Please enter phone number' : null,
+                ),
+                const SizedBox(height: 14),
+                TextFormField(
+                  controller: emailController,
+                  keyboardType: TextInputType.emailAddress,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: InputDecoration(
+                    labelText: 'Guardian Email Address (For Live GPS Alert)',
+                    labelStyle: const TextStyle(color: Colors.white70),
+                    filled: true,
+                    fillColor: Colors.white.withValues(alpha: 0.05),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+                    prefixIcon: const Icon(Icons.email_rounded, color: Color(0xFF6C63FF)),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                SizedBox(
+                  width: double.infinity,
+                  height: 50,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF4DEEEA),
+                      foregroundColor: const Color(0xFF0B0D19),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    ),
+                    onPressed: () async {
+                      if (formKey.currentState!.validate()) {
+                        await context.read<AuthProvider>().addEmergencyContact(
+                              name: nameController.text.trim(),
+                              phone: phoneController.text.trim(),
+                              email: emailController.text.trim(),
+                            );
+                        if (ctx.mounted) Navigator.pop(ctx);
+                      }
+                    },
+                    child: const Text('Save Emergency Guardian', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
+                  ),
+                ),
+                const SizedBox(height: 24),
+              ],
+            ),
           ),
         ),
       ),

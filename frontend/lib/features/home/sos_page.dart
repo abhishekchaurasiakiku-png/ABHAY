@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter_phone_direct_caller/flutter_phone_direct_caller.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/providers/sos_provider.dart';
+import '../../core/providers/auth_provider.dart';
 import '../../shared/widgets/sos_button.dart';
-import '../../core/services/fake_call_service.dart';
 
 /// Emergency SOS page with hold-to-activate button, active SOS display,
 /// fake call trigger, and emergency contacts quick-dial.
@@ -122,16 +123,16 @@ class SosPage extends StatelessWidget {
 
                       const SizedBox(height: 12),
 
-                      // Fake call button
+                      // Real call button (Trusted Contacts)
                       SizedBox(
                         width: double.infinity,
                         height: 50,
                         child: ElevatedButton.icon(
                           onPressed: () {
-                            _showFakeCallDialog(context, sos);
+                            _showTrustedCallDialog(context);
                           },
                           icon: const Icon(Icons.phone, size: 20),
-                          label: const Text('Fake Call'),
+                          label: const Text('Call Trusted Contact'),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.surfaceLight,
                             foregroundColor: AppColors.textPrimary,
@@ -154,7 +155,10 @@ class SosPage extends StatelessWidget {
     );
   }
 
-  void _showFakeCallDialog(BuildContext context, SosProvider sos) {
+  void _showTrustedCallDialog(BuildContext context) {
+    final user = context.read<AuthProvider>().user;
+    final contacts = user?.emergencyContacts ?? [];
+    
     showModalBottomSheet(
       context: context,
       backgroundColor: AppColors.surface,
@@ -169,7 +173,7 @@ class SosPage extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
-                'Choose Caller',
+                'Choose Trusted Contact',
                 style: TextStyle(
                   color: AppColors.textPrimary,
                   fontSize: 18,
@@ -177,7 +181,9 @@ class SosPage extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 16),
-              ...FakeCallService.callerPresets.map((preset) {
+              if (contacts.isEmpty)
+                const Text('No trusted contacts found. Please add them in your profile.', style: TextStyle(color: AppColors.textSecondary)),
+              ...contacts.map((contact) {
                 return ListTile(
                   leading: Container(
                     width: 42,
@@ -186,29 +192,23 @@ class SosPage extends StatelessWidget {
                       color: AppColors.primary.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: Icon(preset.icon, color: AppColors.primary, size: 20),
+                    child: const Icon(Icons.person, color: AppColors.primary, size: 20),
                   ),
                   title: Text(
-                    preset.name,
+                    contact.name,
                     style: const TextStyle(color: AppColors.textPrimary),
                   ),
                   subtitle: Text(
-                    preset.number,
+                    contact.phone,
                     style: const TextStyle(color: AppColors.textTertiary, fontSize: 12),
                   ),
-                  onTap: () {
+                  onTap: () async {
                     Navigator.pop(ctx);
-                    sos.triggerFakeCall(
-                      callerName: preset.name,
-                      callerNumber: preset.number,
-                      delay: const Duration(seconds: 5),
-                    );
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Fake call from "${preset.name}" in 5 seconds'),
-                        backgroundColor: AppColors.surfaceLight,
-                      ),
-                    );
+                    try {
+                      await FlutterPhoneDirectCaller.callNumber(contact.phone);
+                    } catch (e) {
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Could not initiate direct call')));
+                    }
                   },
                 );
               }),
@@ -259,9 +259,13 @@ class _ActiveSosInfo extends StatelessWidget {
             children: [
               const Icon(Icons.fiber_manual_record, color: AppColors.emergency, size: 10),
               const SizedBox(width: 8),
-              const Text(
-                'Recording audio & photos',
-                style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
+              const Expanded(
+                child: Text(
+                  'Recording audio & photos',
+                  style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
             ],
           ),
@@ -270,9 +274,13 @@ class _ActiveSosInfo extends StatelessWidget {
             children: [
               const Icon(Icons.fiber_manual_record, color: AppColors.safe, size: 10),
               const SizedBox(width: 8),
-              const Text(
-                'Live location streaming to secure server',
-                style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
+              const Expanded(
+                child: Text(
+                  'Live location streaming to secure server',
+                  style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
             ],
           ),

@@ -2,7 +2,8 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/providers/location_provider.dart';
 
@@ -15,7 +16,7 @@ class MapPage extends StatefulWidget {
 }
 
 class _MapPageState extends State<MapPage> {
-  GoogleMapController? _mapController;
+  final MapController _mapController = MapController();
 
   @override
   void initState() {
@@ -27,7 +28,7 @@ class _MapPageState extends State<MapPage> {
 
   @override
   void dispose() {
-    _mapController?.dispose();
+    _mapController.dispose();
     super.dispose();
   }
 
@@ -81,12 +82,10 @@ class _MapPageState extends State<MapPage> {
                         icon: const Icon(Icons.my_location_rounded, color: Color(0xFF4DEEEA), size: 26),
                         onPressed: () async {
                           await loc.getCurrentPosition();
-                          if (_mapController != null && loc.currentPosition != null) {
-                            _mapController!.animateCamera(
-                              CameraUpdate.newLatLngZoom(
-                                LatLng(loc.currentPosition!.latitude, loc.currentPosition!.longitude),
-                                16,
-                              ),
+                          if (loc.currentPosition != null) {
+                            _mapController.move(
+                              LatLng(loc.currentPosition!.latitude, loc.currentPosition!.longitude),
+                              16.0,
                             );
                           }
                         },
@@ -108,32 +107,63 @@ class _MapPageState extends State<MapPage> {
                         width: double.infinity,
                         child: Stack(
                           children: [
-                            GoogleMap(
-                              initialCameraPosition: CameraPosition(
-                                target: center,
-                                zoom: 15,
+                            FlutterMap(
+                              mapController: _mapController,
+                              options: MapOptions(
+                                initialCenter: center,
+                                initialZoom: 15.0,
+                                interactionOptions: const InteractionOptions(
+                                  flags: InteractiveFlag.all,
+                                ),
                               ),
-                              myLocationEnabled: loc.hasPermission && pos != null,
-                              myLocationButtonEnabled: false,
-                              zoomControlsEnabled: false,
-                              circles: {
-                                Circle(
-                                  circleId: const CircleId('user_safety_zone'),
-                                  center: center,
-                                  radius: 350,
-                                  fillColor: const Color(0xFF00E676).withValues(alpha: 0.18),
-                                  strokeColor: const Color(0xFF00E676),
-                                  strokeWidth: 2,
+                              children: [
+                                TileLayer(
+                                  urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                                  userAgentPackageName: 'com.example.frontend',
                                 ),
-                              },
-                              markers: {
-                                Marker(
-                                  markerId: const MarkerId('current_pos'),
-                                  position: center,
-                                  infoWindow: const InfoWindow(title: 'You are here', snippet: 'High Safety Geofence Zone'),
+                                CircleLayer(
+                                  circles: [
+                                    CircleMarker(
+                                      point: center,
+                                      radius: 250,
+                                      useRadiusInMeter: true,
+                                      color: const Color(0xFF00E676).withValues(alpha: 0.18),
+                                      borderColor: const Color(0xFF00E676),
+                                      borderStrokeWidth: 2,
+                                    ),
+                                  ],
                                 ),
-                              },
-                              onMapCreated: (controller) => _mapController = controller,
+                                MarkerLayer(
+                                  markers: [
+                                    Marker(
+                                      point: center,
+                                      width: 54,
+                                      height: 54,
+                                      child: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Container(
+                                            padding: const EdgeInsets.all(6),
+                                            decoration: BoxDecoration(
+                                              color: const Color(0xFFFF4D9D),
+                                              shape: BoxShape.circle,
+                                              border: Border.all(color: Colors.white, width: 2),
+                                              boxShadow: [
+                                                BoxShadow(
+                                                  color: const Color(0xFFFF4D9D).withValues(alpha: 0.5),
+                                                  blurRadius: 10,
+                                                  spreadRadius: 2,
+                                                ),
+                                              ],
+                                            ),
+                                            child: const Icon(Icons.my_location_rounded, color: Colors.white, size: 22),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
                             ),
                             // Safe Zone Status Badge Overlay
                             Positioned(
@@ -176,15 +206,7 @@ class _MapPageState extends State<MapPage> {
                         final uri = pos != null
                             ? Uri.parse('https://www.google.com/maps/search/?api=1&query=${pos.latitude},${pos.longitude}')
                             : Uri.parse('https://www.google.com/maps');
-                        if (await canLaunchUrl(uri)) {
-                          await launchUrl(uri, mode: LaunchMode.externalApplication);
-                        } else {
-                          if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Could not open Google Maps navigation')),
-                            );
-                          }
-                        }
+                        await launchUrl(uri, mode: LaunchMode.externalApplication);
                       },
                       icon: const Icon(Icons.directions_rounded, size: 22),
                       label: const Text(

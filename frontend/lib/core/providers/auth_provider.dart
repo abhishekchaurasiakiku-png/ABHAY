@@ -215,6 +215,7 @@ class AuthProvider extends ChangeNotifier {
   Future<bool> addEmergencyContact({
     required String name,
     required String phone,
+    String email = '',
     String relationship = 'Guardian',
   }) async {
     if (_user == null) return false;
@@ -223,6 +224,7 @@ class AuthProvider extends ChangeNotifier {
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       name: name.trim(),
       phone: phone.trim(),
+      email: email.trim(),
       relationship: relationship,
     );
 

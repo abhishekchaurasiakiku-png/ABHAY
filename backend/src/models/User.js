@@ -4,6 +4,7 @@ const bcrypt = require('bcrypt');
 const emergencyContactSchema = new mongoose.Schema({
   name: { type: String, required: true },
   phone: { type: String, required: true },
+  email: { type: String },
   relationship: { type: String, default: 'Other' },
   notifyOnSos: { type: Boolean, default: true },
   fcmToken: { type: String },
